@@ -1,0 +1,30 @@
+script: tcd_areas.R
+
+parameters:
+  version:
+    default: "2022"
+
+artefacts:
+  - data:
+      description: area hierarchy dataset
+      filenames:
+        - tcd_areas.geojson
+
+  - staticgraph:
+      description: Check boundaries
+      filenames:
+        - check/tcd-hierarchy-plot.png
+
+displayname: TCD area hierarchy dataset
+
+packages:
+  - spud
+  - dplyr
+  - sf
+  - pryr
+  - naomi.utils
+  - naomi
+  - readr
+  - ggplot2
+  - stringr
+

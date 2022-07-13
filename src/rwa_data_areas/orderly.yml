@@ -1,0 +1,31 @@
+script: rwa_areas.R
+
+parameters:
+  version:
+    default: "2022"
+
+artefacts:
+  - data:
+      description: area hierarchy dataset
+      filenames:
+        - rwa_areas.geojson
+        - rwa_area_boundaries.geojson
+        - rwa_area_hierarchy.csv
+        - rwa_area_levels.csv
+  - staticgraph:
+      description: Check boundaries
+      filenames:
+        - check/rwa-hierarchy-plot.png
+
+displayname: RWA area hierarchy dataset
+
+packages:
+  - dplyr
+  - spud
+  - sf
+  - rmapshaper
+  - naomi
+  - ggplot2
+  - forcats
+  - readr
+  - naomi.utils

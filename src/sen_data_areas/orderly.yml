@@ -1,0 +1,32 @@
+script: sen_areas.R
+
+parameters:
+  version:
+    default: "2022"
+
+artefacts:
+  - data:
+      description: area hierarchy dataset
+      filenames:
+        - sen_areas.geojson
+
+  - staticgraph:
+      description: Check boundaries
+      filenames:
+        - check/sen-hierarchy-plot.png
+        - check/sen-compare-boudnaries.png
+
+displayname: SEN area hierarchy dataset
+
+packages:
+  - spud
+  - dplyr
+  - sf
+  - pryr
+  - naomi.utils
+  - naomi
+  - readr
+  - ggplot2
+  - stringr
+  - rmapshaper
+

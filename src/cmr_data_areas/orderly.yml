@@ -1,0 +1,33 @@
+script: cmr_areas.R
+
+parameters:
+  version:
+    default: "2022"
+
+artefacts:
+  - data:
+      description: area hierarchy dataset
+      filenames:
+        - cmr_areas.geojson
+        - cmr_area_hierarchy.csv
+
+  - staticgraph:
+      description: Check boundaries
+      filenames:
+        - check/cmr-hierarchy-plot.png
+        - check/check-overlay-north-region-fotokol.png
+
+displayname: CMR area hierarchy dataset
+
+packages:
+  - dplyr
+  - ggplot2
+  - naomi
+  - spud
+  - pryr
+  - readr
+  - readxl
+  - rmapshaper
+  - sf
+  - stringr
+  - naomi.utils

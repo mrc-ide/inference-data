@@ -1,0 +1,32 @@
+script: hti_areas.R
+
+parameters:
+  version:
+    default: "2022"
+
+artefacts:
+  - data:
+      description: area hierarchy dataset
+      filenames:
+        - hti_areas.geojson
+        - hti_areas_commune.geojson
+        - hti_area_hierarchy.csv
+
+  - staticgraph:
+      description: Check boundaries
+      filenames:
+        - check/hti-hierarchy-plot.png
+        - check/hti-compare-simplified-boundaries.png
+
+displayname: HTI area hierarchy dataset
+
+packages:
+  - dplyr
+  - sf
+  - naomi
+  - spud
+  - readr
+  - pryr
+  - rmapshaper
+  - ggplot2
+  - naomi.utils

@@ -1,0 +1,32 @@
+script: gin_areas.R
+
+parameters:
+  version:
+    default: "2022"
+
+artefacts:
+  - data:
+      description: area hierarchy dataset
+      filenames:
+        - gin_areas.geojson
+        - gin_area_hierarchy.csv
+
+  - staticgraph:
+      description: Check boundaries
+      filenames:
+        - check/gin-hierarchy-plot.png
+
+displayname: GIN area hierarchy dataset
+
+packages:
+  - spud
+  - dplyr
+  - sf
+  - pryr
+  - naomi.utils
+  - naomi
+  - readr
+  - ggplot2
+  - forcats
+  - stringr
+

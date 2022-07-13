@@ -1,0 +1,36 @@
+script: nam_areas.R
+
+parameters:
+  version:
+    default: "2022"
+
+artefacts:
+  - data:
+      description: area hierarchy dataset
+      filenames:
+        - nam_areas.geojson
+        - nam_area_boundaries.geojson
+        - nam_area_hierarchy.csv
+        - nam_area_levels.csv
+
+  - staticgraph:
+      description: Check boundaries
+      filenames:
+        - check/hierarchy-plot.png
+
+displayname: NAM area hierarchy dataset
+
+packages:
+  - dplyr
+  - forcats
+  - ggplot2
+  - naomi
+  - spud
+  - pryr
+  - readr
+  - rmapshaper
+  - sf
+  - readxl
+  - tidyr
+  - naomi.utils
+

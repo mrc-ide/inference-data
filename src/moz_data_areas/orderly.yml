@@ -1,0 +1,38 @@
+script: moz_areas.R
+
+parameters:
+  version:
+    default: "2022"
+
+artefacts:
+  - data:
+      description: area hierarchy dataset
+      filenames:
+        - moz_areas.geojson
+        - moz_area_boundaries.geojson
+        - moz_area_hierarchy.csv
+        - moz_area_levels.csv
+        - moz_areas_wide.zip
+
+  - staticgraph:
+      description: Check boundaries
+      filenames:
+        - check/hierarchy-plot.png
+
+displayname: MOZ area hierarchy dataset
+
+packages:
+  - dplyr
+  - forcats
+  - ggplot2
+  - naomi
+  - spud
+  - pryr
+  - readr
+  - readxl
+  - rmapshaper
+  - sf
+  - withr
+  - naomi.utils
+
+

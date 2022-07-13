@@ -1,0 +1,27 @@
+script: script.R
+
+parameters:
+  version:
+    default: "2022"
+
+
+artefacts:
+  - data:
+      description: ZAF area hierarchy dataset
+      filenames:
+        - zaf_areas.geojson
+
+
+displayname: ZAF area hierarchy dataset pulled from archive and tagged
+
+packages:
+  - dplyr
+  - spud
+  - readr
+  - sf
+
+depends:
+  zaf_data_areas:
+    id: latest
+    use:
+      depends/zaf_areas.geojson: zaf_areas.geojson

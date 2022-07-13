@@ -1,0 +1,36 @@
+script: uga_areas.R
+
+parameters:
+  version:
+    default: "2022"
+
+artefacts:
+  - data:
+      description: area hierarchy dataset
+      filenames:
+        - uga_areas.geojson
+        - uga_area_boundaries.geojson
+        - uga_area_hierarchy.csv
+        - uga_area_levels.csv
+        - uga_areas_kalangala-masaka-bridge.geojson
+  - staticgraph:
+      description: Check boundaries
+      filenames:
+        - uga_area_hierarchy.png
+
+displayname: UGA area hierarchy dataset
+
+
+packages:
+  - dplyr
+  - forcats
+  - ggplot2
+  - naomi
+  - naomi.utils
+  - spud
+  - pryr
+  - readr
+  - rmapshaper
+  - sf
+  - stringr
+  - rdhs

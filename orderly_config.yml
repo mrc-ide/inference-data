@@ -1,0 +1,28 @@
+remote:
+  # main:
+  #   driver: orderlyweb::orderlyweb_remote
+  #   args:
+  #     host: hiv-orderly.dide.ic.ac.uk
+  #     port: 443
+  #     prefix: fertility
+  #     token: $ORDERLYWEB_GITHUB_TOKEN
+  #   primary: true
+  #   master_only: true
+  naomi2:
+    driver: orderly.sharepoint::orderly_remote_sharepoint
+    args:
+      url: https://imperiallondon.sharepoint.com
+      site: HIVInferenceGroup-WP
+      path: Shared Documents/orderly/naomi-orderly-naomi2
+
+fields:
+  requester:
+    required: false
+  author:
+    required: false
+
+vault:
+  addr: https://vault.dide.ic.ac.uk:8200
+
+global_resources:
+  global

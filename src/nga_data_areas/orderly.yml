@@ -1,0 +1,34 @@
+script: nga_areas.R
+parameters:
+  version:
+    default: "2022"
+
+artefacts:
+  - data:
+      description: area hierarchy dataset
+      filenames:
+        - nga_areas.geojson
+        - nga_area_boundaries.geojson
+        - nga_area_hierarchy.csv
+        - nga_area_levels.csv
+        - nga_area_map_datim.csv
+  - staticgraph:
+      description: Check boundaries
+      filenames:
+        - check/nga-hierarchy-plot.png
+
+displayname: NGA area hierarchy dataset
+
+packages:
+  - dplyr
+  - forcats
+  - ggplot2
+  - naomi
+  - spud
+  - pryr
+  - readr
+  - rmapshaper
+  - sf
+  - tidyr
+  - naomi.utils
+

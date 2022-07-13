@@ -1,0 +1,30 @@
+script: swz_areas.R
+
+parameters:
+  version:
+    default: "2022"
+
+artefacts:
+  - data:
+      description: area hierarchy dataset
+      filenames:
+        - swz_areas.geojson
+        - swz_area_boundaries.geojson
+        - swz_area_hierarchy.csv
+        - swz_area_levels.csv
+
+  - staticgraph:
+      description: Check boundaries
+      filenames:
+        - check/swz-hierarchy-plot.png
+
+displayname: SWZ area hierarchy dataset
+
+packages:
+  - dplyr
+  - ggplot2
+  - naomi
+  - spud
+  - sf
+  - naomi.utils
+  - readr

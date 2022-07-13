@@ -1,0 +1,34 @@
+script: ken_areas.R
+
+parameters:
+  version:
+    default: "2022"
+
+artefacts:
+  - data:
+      description: area hierarchy dataset
+      filenames:
+        - ken_areas.geojson
+        - ken_area_boundaries.geojson
+        - ken_area_hierarchy.csv
+        - ken_area_levels.csv
+        - ken_areas_wide.zip
+
+  - staticgraph:
+      description: Check boundaries
+      filenames:
+        - check/ken-hierarchy-plot.png
+
+displayname: KEN area hierarchy dataset
+
+packages:
+  - dplyr
+  - ggplot2
+  - naomi
+  - pryr
+  - readr
+  - readxl
+  - rmapshaper
+  - sf
+  - withr
+  - naomi.utils

@@ -1,0 +1,26 @@
+script: script.R
+
+parameters:
+  version:
+    default: "2022"
+
+
+artefacts:
+  - data:
+      description: MWI area hierarchy dataset
+      filenames:
+        - mwi_areas.geojson
+
+
+displayname: MWI area hierarchy dataset pulled from archive and tagged
+
+packages:
+  - dplyr
+  - readr
+  - sf
+
+depends:
+  mwi_data_areas:
+    id: latest
+    use:
+      depends/mwi_areas.geojson: mwi_areas.geojson

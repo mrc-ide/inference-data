@@ -1,0 +1,32 @@
+script: gnq_areas.R
+
+parameters:
+  version:
+    default: "2022"
+
+artefacts:
+  - data:
+      description: area hierarchy dataset
+      filenames:
+        - gnq_areas.geojson
+
+
+  - staticgraph:
+      description: Check boundaries
+      filenames:
+        - check/gnq-hierarchy-plot.png
+
+displayname: GNQ area hierarchy dataset
+
+packages:
+  - dplyr
+  - ggplot2
+  - naomi.utils
+  - naomi
+  - pryr
+  - readr
+  - sf
+  - spud
+  - stringr
+
+

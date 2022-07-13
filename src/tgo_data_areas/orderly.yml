@@ -1,0 +1,31 @@
+script: tgo_areas.R
+
+parameters:
+  version:
+    default: "2022"
+
+artefacts:
+  - data:
+      description: area hierarchy dataset
+      filenames:
+        - tgo_areas.geojson
+        - tgo_areas_spectrum_national.geojson
+
+
+  - staticgraph:
+      description: Check boundaries
+      filenames:
+        - check/tgo-hierarchy-plot.png
+
+displayname: TGO area hierarchy dataset
+
+packages:
+  - spud
+  - sf
+  - dplyr
+  - forcats
+  - naomi
+  - ggplot2
+  - naomi.utils
+  - pryr
+  - rmapshaper

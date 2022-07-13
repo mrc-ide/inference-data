@@ -1,0 +1,35 @@
+script: tza_areas.R
+
+parameters:
+  version:
+    default: "2022"
+
+artefacts:
+  - data:
+      description: area hierarchy dataset
+      filenames:
+        - tza_areas.geojson
+        - tza_area_boundaries.geojson
+        - tza_area_hierarchy.csv
+        - tza_area_levels.csv
+
+  - staticgraph:
+      description: Check boundaries
+      filenames:
+        - check/tza-hierarchy-plot.png
+        - check/tza-comparsion-pepfar-humdata-boundaries.png
+
+displayname: TZA area hierarchy dataset
+
+packages:
+  - dplyr
+  - forcats
+  - ggplot2
+  - naomi
+  - spud
+  - pryr
+  - readr
+  - rmapshaper
+  - sf
+  - gridExtra
+  - naomi.utils
