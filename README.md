@@ -9,12 +9,6 @@ This is an orderly repository that holds master datasets for:
 
 The master branch is associated with an Estimates year, using the orderly task parameter `version`, and all tasks will be updated only once a year.
 
-## Using the remote
-
-### Setup
-
-Run setup script `./setup` to add github token.
-
-### Orderly web remote
+## Using the orderly web remote
 
 See https://www.vaccineimpact.org/orderly/articles/remote.html#interacting-with-the-remote-server
