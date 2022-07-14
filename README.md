@@ -9,6 +9,8 @@ This is an orderly repository that holds master datasets for:
 
 The master branch is associated with an Estimates year, using the orderly task parameter `version`, and all tasks will be updated only once a year.
 
+**Ensure that all downstream tasks using master dataset tasks use a version parameter to avoid crossing datasets between different years**
+
 ## Using the orderly web remote
 
 See https://www.vaccineimpact.org/orderly/articles/remote.html#interacting-with-the-remote-server
