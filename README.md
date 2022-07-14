@@ -14,3 +14,7 @@ The master branch is associated with an Estimates year, using the orderly task p
 ## Using the orderly web remote
 
 See https://www.vaccineimpact.org/orderly/articles/remote.html#interacting-with-the-remote-server
+
+## Setting up environment variables
+
+Several paths to the IC Sharepoint are private and require environment variables to be set. Message Oli for these.
