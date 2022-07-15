@@ -7,7 +7,6 @@ remote:
       prefix: inference_data
       token: $ORDERLYWEB_GITHUB_TOKEN
     primary: true
-    default_branch_only: true
     default_branch: main
   # main:
   #   driver: orderlyweb::orderlyweb_remote
