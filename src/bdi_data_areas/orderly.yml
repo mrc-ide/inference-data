@@ -13,10 +13,10 @@ artefacts:
       description: area hierarchy summary map
       filenames:
         - bdi_area_hierarchy.png
-  - staticgraph:
-      description: summary of boundary changes
-      filenames:
-        - check/check-simplified-boundaries.png
+  # - staticgraph:
+  #     description: summary of boundary changes
+  #     filenames:
+  #       - check/check-simplified-boundaries.png
 
 displayname: BDI area hierarchy dataset
 
