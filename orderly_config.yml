@@ -8,15 +8,16 @@ remote:
       token: $ORDERLYWEB_GITHUB_TOKEN
     primary: true
     default_branch: main
-  # main:
-  #   driver: orderlyweb::orderlyweb_remote
-  #   args:
-  #     host: hiv-orderly.dide.ic.ac.uk
-  #     port: 443
-  #     prefix: fertility
-  #     token: $ORDERLYWEB_GITHUB_TOKEN
-  #   primary: true
-  #   master_only: true
+  fertility:
+    driver: orderlyweb::orderlyweb_remote
+    args:
+      host: hiv-orderly.dide.ic.ac.uk
+      port: 443
+      prefix: fertility
+      token: $ORDERLYWEB_GITHUB_TOKEN
+    primary: false
+    default_branch: main
+    default_branch_only: true
   naomi2:
     driver: orderly.sharepoint::orderly_remote_sharepoint
     args:
@@ -35,3 +36,5 @@ vault:
 
 global_resources:
   global
+
+minimum_orderly_version: 1.4.9
