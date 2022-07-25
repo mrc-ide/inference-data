@@ -1,5 +1,5 @@
 remote:
-  inference:
+  inference-web:
     driver: orderlyweb::orderlyweb_remote
     args:
       host: hiv-orderly.dide.ic.ac.uk
@@ -8,7 +8,7 @@ remote:
       token: $ORDERLYWEB_GITHUB_TOKEN
     primary: true
     default_branch: main
-  fertility:
+  fertility-web:
     driver: orderlyweb::orderlyweb_remote
     args:
       host: hiv-orderly.dide.ic.ac.uk
@@ -18,12 +18,18 @@ remote:
     primary: false
     default_branch: main
     default_branch_only: true
-  naomi2:
+  naomi-sharepoint:
     driver: orderly.sharepoint::orderly_remote_sharepoint
     args:
       url: https://imperiallondon.sharepoint.com
       site: HIVInferenceGroup-WP
       path: Shared Documents/orderly/naomi-orderly-naomi2
+  fertility-sharepoint:
+    driver: orderly.sharepoint::orderly_remote_sharepoint
+    args:
+      url: https://imperiallondon.sharepoint.com
+      site: HIVInferenceGroup-WP
+      path: Shared Documents/orderly/fertility
 
 fields:
   requester:
