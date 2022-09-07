@@ -2,7 +2,7 @@
 #' Source: Mozambique estimates team
 #' Levels:
 #'   * 1: Merged province (10)
-#'   * 2: Province (11)
+#'   * 2: Province (11))
 #'   * 3: District (161)
 #' Spectrum: Province (level 1)
 #' EPP: Province (level 1)
@@ -10,6 +10,11 @@
 #' PEPFAR PSNU: District (level 3)
 
 dir.create("check")
+
+## sf v 1.0.0 update changes to use s2 spherical geometry as default
+## This creates issues for DHS coordinate data extraction scripts
+## Revert back to planar geometry
+sf::sf_use_s2(FALSE)
 
 #' Authenticate SharePoint login
 sharepoint <- spud::sharepoint$new("https://imperiallondon.sharepoint.com/")
