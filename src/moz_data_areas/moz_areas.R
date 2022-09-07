@@ -1,19 +1,15 @@
 #' ## Mozambique (MOZ)
 #' Source: Mozambique estimates team
 #' Levels:
-#'   * 1: Province (10))
-#'   * 2: District (161)
+#'   * 1: Merged province (10)
+#'   * 2: Province (11)
+#'   * 3: District (161)
 #' Spectrum: Province (level 1)
 #' EPP: Province (level 1)
 #' EPP Urban/Rural: No
-#' PEPFAR PSNU: District (level 2)
+#' PEPFAR PSNU: District (level 3)
 
 dir.create("check")
-
-## sf v 1.0.0 update changes to use s2 spherical geometry as default
-## This creates issues for DHS coordinate data extraction scripts
-## Revert back to planar geometry
-sf::sf_use_s2(FALSE)
 
 #' Authenticate SharePoint login
 sharepoint <- spud::sharepoint$new("https://imperiallondon.sharepoint.com/")
@@ -62,8 +58,8 @@ sh <- sh %>%
          dist = tolower(Distrito)) %>%
   full_join(
     dist %>%
-      mutate(District = recode(District, "Cahora-Bassa" = "Cahora Bassa"),
-             dist = tolower(District))
+    mutate(District = recode(District, "Cahora-Bassa" = "Cahora Bassa"),
+           dist = tolower(District))
   )
 
 moz_simple <- sh %>%
@@ -86,6 +82,17 @@ moz_simple %>% filter(CodProv %in% 10:11) %>%
 
 
 #' # Spectrum region codes
+#'
+
+#' Create new level of hierarchy "Merged provinces" that are the same as the existing provinces in the shape file.
+#' This will be admin-2.
+#' Maputo Province and Maputo City will be merged to create Maputo, which will be an admin-2 level.
+#' All other admin-2 areas will be identical to their parent admin-1 areas.
+#'
+moz_simple <- moz_simple %>%
+  mutate(merge_prov = Province,
+         merge_prov_code = province_code)
+
 
 spectrum_region_code  <- c("Cabo Delgado" = 11,
                            # "Cidade de Maputo" = 20,
@@ -126,8 +133,10 @@ moz_wide <- moz %>%
             id0 = "MOZ",
             name1 = Province,
             id1 = fct_inorder(paste0("MOZ_1_", sprintf("%02d", province_code))),
-            name2 = District,
-            id2 = fct_inorder(paste0("MOZ_2_", sprintf("%02d%02d", province_code, district_code))),
+            name2 = merge_prov,
+            id2 = fct_inorder(paste0("MOZ_2_", sprintf("%02d",  merge_prov_code))),
+            name3 = District,
+            id3 = fct_inorder(paste0("MOZ_3_", sprintf("%02d%02d", province_code, district_code))),
             spectrum_region_code)
 
 moz_long <- gather_areas(moz_wide)
@@ -139,12 +148,12 @@ moz_areas <- moz_long %>%
          center_y = sf::st_coordinates(center)[,2],
          center = NULL,
          area_level_label = area_level %>%
-           recode(`0` = "Country", `1` = "Provincia", `2` = "Distrito"),
+           recode(`0` = "Country", `1` = "Merged provinces", `2` = "Provincia", `3` = "Distrito"),
          display = TRUE,
          spectrum_level = area_level == 1,
          epp_level = area_level == 1,
-         naomi_level = area_level == 2,
-         pepfar_psnu_level = area_level == 2)
+         naomi_level = area_level == 3,
+         pepfar_psnu_level = area_level == 3)
 
 
 moz_areas_wide <- spread_areas(st_drop_geometry(moz_areas)) %>%
