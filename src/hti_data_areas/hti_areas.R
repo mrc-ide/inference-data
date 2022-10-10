@@ -15,20 +15,25 @@ dir.create("check")
 #' Authenticate SharePoint login
 sharepoint <- spud::sharepoint$new("https://imperiallondon.sharepoint.com/")
 
-naomi_raw_path <- "sites/HIVInferenceGroup-WP/Shared%20Documents/Data/naomi-raw/"
+#' Read in files from SharePoint
+naomi_raw_path <- "sites/HIVInferenceGroup-WP/Shared%20Documents/Data/naomi-raw"
 
-file <- "HTI/2020-01-14/HaitiShape.zip"
+urls <- list(boundaries = "HTI/2020-01-14/HaitiShape.zip",
+             idmap_2021 = "HTI/2021-01-21/hti_area_id_2021.csv"
+) %>%
+  lapply(function(x) file.path(naomi_raw_path, x)) %>%
+  lapply(URLencode)
 
 #' Download files from SharePoint
-raw_path <- URLencode(file.path(naomi_raw_path, file))
-raw <- sharepoint$download(raw_path)
+files <- lapply(urls, sharepoint$download)
+
 
 ## sf v 1.0.0 update changes to use s2 spherical geometry as default
 ## This creates issues for DHS coordinate data extraction scripts
 ## Revert back to planar geometry
 sf::sf_use_s2(FALSE)
 
-raw <- read_sf_zip(raw)
+raw <- read_sf_zip(files$boundaries)
 
 hti_simple <- rmapshaper::ms_simplify(raw, 0.2)
 
@@ -52,20 +57,16 @@ p1 <- ggplot() +
 ggsave("check/hti-compare-simplified-boundaries.png", p1, h = 6, w = 10)
 
 #' Generate random ids
-gen_id <- function(iso3, level, nchar = 5) {
-  str <- paste0(sample(c(letters, 0:9), nchar, replace = TRUE), collapse = "")
-  paste0(iso3, "_", level, "_", str)
-}
+id_map <- read_csv(files$idmap_2021)
+
+id_map_wide <- spread_areas(id_map)
 
 hti_wide <- hti_simple %>%
-  mutate(id0 = "HTI") %>%
-  group_by(name0, name1) %>%
-  mutate(id1 = gen_id("HTI", 1)) %>%
-  group_by(name0, name2) %>%
-  mutate(id2 = gen_id("HTI", 2)) %>%
-  group_by(name0, name3) %>%
-  mutate(id3 = gen_id("HTI", 3)) %>%
-  ungroup()
+  select(area_name0 = name0, area_name1 = name1, area_name2 = name2,
+         area_name3 = name3, spectrum_region_code) %>%
+  left_join(id_map_wide) %>%
+  rename_all(~str_replace(., "^area_", "")) %>%
+  select(-c(id))
 
 hti <- gather_areas(hti_wide)
 
