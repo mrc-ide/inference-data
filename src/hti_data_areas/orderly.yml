@@ -30,3 +30,4 @@ packages:
   - rmapshaper
   - ggplot2
   - naomi.utils
+  - stringr
