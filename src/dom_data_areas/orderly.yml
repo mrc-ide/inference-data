@@ -1,0 +1,31 @@
+script: dom_areas.R
+
+parameters:
+  version:
+    default: "2023"
+
+artefacts:
+  - data:
+      description: area hierarchy dataset
+      filenames:
+        - dom_areas.geojson
+
+
+  - staticgraph:
+      description: Check boundaries
+      filenames:
+        - check/dom-hierarchy-plot.png
+
+displayname: DOM - Make area hierarchy dataset
+
+packages:
+  - spud
+  - dplyr
+  - sf
+  - pryr
+  - naomi.utils
+  - naomi
+  - readr
+  - ggplot2
+  - rmapshaper
+
