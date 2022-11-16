@@ -85,3 +85,5 @@ sf::st_write(dom_areas, "dom_areas.geojson", delete_dsn = TRUE)
 #' Plot hierarchy
 hierarchy_plot <- plot_area_hierarchy_summary(dom_areas)
 ggsave("check/dom-hierarchy-plot.png", hierarchy_plot, h = 6, w = 12)
+
+dev.off()
