@@ -49,8 +49,10 @@ ggplot() +
   geom_sf(data = datim_simple, colour = "black", fill = NA)
 
 # Datim and local boundaries look very simillar
-id_map <- read_csv(files$id_map) 
-
+id_map <- read_csv(files$id_map) %>%
+  mutate(area_name = if_else(area_level == 1 & area_name != 10, paste0("0", area_name), 
+                             area_name)) 
+  
 dom_wide <- prov_simple %>%
   select(name1 = REG, name2 = TOPONIMIA) %>%
   arrange(name1, name2) %>%
@@ -77,7 +79,6 @@ dom_areas <- dom_long %>%
   select(area_id, area_name, parent_area_id, area_level, area_level_label,
          spectrum_region_code, display, area_sort_order,
          center_x, center_y, geometry)
-
 
 #' Save boundaries
 sf::st_write(dom_areas, "dom_areas.geojson", delete_dsn = TRUE)
