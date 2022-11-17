@@ -21,7 +21,8 @@ urls <- list(ubos2019 = "UGA/2019-11-09/uganda_districts_2019_i.zip",
              ubos2020 = "UGA/2020-10-13/Uganda_Districts_2020_UBOS_EPSG_4326.zip",
              uga_pepfar = "UGA/2019-07-10/Uganda_PROD_5_District_DistrictLsib_2019_Jul.zip",
              ug_lakes = "UGA/2020-04-27/Ug_lakes.zip",
-             ug2021area_id = "UGA/2020-11-25/uga_2021_area_id.csv"
+             ug2021area_id = "UGA/2020-11-25/uga_2021_area_id.csv", 
+             uga2022_boudnaries = "UGA/2022-11-11/uganda_districts.zip"
              ) %>%
   lapply(function(x) file.path(naomi_raw_path, x)) %>%
   lapply(URLencode)
@@ -36,7 +37,18 @@ sf::sf_use_s2(FALSE)
 ubos2019 <- read_sf_zip(files$ubos2019)
 ubos2020 <- read_sf_zip(files$ubos2020)
 uga_pepfar <- read_sf_zip(files$uga_pepfar)
+districts_2023 <- read_sf_zip(files$uga2022_boudnaries)
 
+ggplot(districts_2023) +
+  geom_sf()
+
+
+map2023 <- districts_2023 %>%
+  mutate(area_name)
+
+map <- read_csv(files$ug2021area_id) %>%
+  select(area_id = area_id3, area_name = area_name3) %>%
+  
 
 #' The file uga_2021_area_id contains the area hierarchy and area_id to assign
 #' corresponding to the 2020 UBOS shape file with one new district (136 total).
