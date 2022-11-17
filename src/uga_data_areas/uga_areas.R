@@ -134,7 +134,7 @@ uga_areas <- uga_long %>%
 
 
 #' Save boundaries
-sf::write_sf(bfa_areas, "uga_areas.geojson", delete_dsn = TRUE)
+sf::write_sf(uga_areas, "uga_areas.geojson", delete_dsn = TRUE)
 
 
 
