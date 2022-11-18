@@ -28,7 +28,7 @@ global_resources:
 ## ensure the imported file is named 'depends/<iso3>_areas.geojson'
 ## Ideally, keep this list alphabetised for convenience
 
- depends:
+# depends:
 #   ago_data_areas:
 #     id: latest(parameter:version == version)
 #     use:
