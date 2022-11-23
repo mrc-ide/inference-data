@@ -44,18 +44,26 @@ uga_2022 <- ubos2022 %>%
                              "Masaka city" = "Masaka")) %>%
   left_join(heirarchy %>%
               mutate(area_name3 = recode(area_name3, 
-                 "AruaCity" = "Arua city", 
-                 "GuluCity" = "Gulu city", 
-                 "MbararaCity" = "Mbarara city", 
-                 "HoimaCity" = "Hoima city", 
-                 "JinjaCity" = "Jinja city", 
-                 "MbaleCity" = "Mbale city", 
-                 "LiraCity" = "Lira city",
-                 "SorotiCity" = "Soroti city", 
-                 "FortPortalCity" = "Fort portal city", 
-                 "Madi Okollo" = "Madi okollo"
-                 )))
-
+                                         "AruaCity" = "Arua city", 
+                                         "GuluCity" = "Gulu city", 
+                                         "MbararaCity" = "Mbarara city", 
+                                         "HoimaCity" = "Hoima city", 
+                                         "JinjaCity" = "Jinja city", 
+                                         "MbaleCity" = "Mbale city", 
+                                         "LiraCity" = "Lira city",
+                                         "SorotiCity" = "Soroti city", 
+                                         "FortPortalCity" = "Fort portal city", 
+                                         "Madi Okollo" = "Madi okollo"))) %>%
+  mutate(area_name3 = recode(area_name3, 
+         "Arua city" = "Arua City", 
+         "Gulu city" = "Gulu City", 
+          "Mbarara city" = "Mbarara City", 
+          "Hoima city" = "Hoima City", 
+          "Jinja city" = "Jinja City", 
+          "Mbale city" = "Mbale City", 
+          "Lira city" = "Lira City",
+          "Soroti city" = "Soroti City", 
+          "Fort portal city" = "Fort portal City"))
 
 filter(uga_2022, is.na(area_id3))
 
@@ -63,9 +71,21 @@ object_size(uga_2022)
 
 uga_simple2022 <- ms_simplify(uga_2022, keep = 0.1) %>%
   st_make_valid()
+
 object_size(uga_simple2022)
 
 st_is_valid(uga_simple2022)
+
+
+
+# Plot new districts 
+new2022 <- uga_simple2022 %>%
+  filter(nchar(area_id3) == 11)
+
+ggplot() +
+  geom_sf(data = new2022, aes(fill = area_name2)) +
+  geom_sf_text(data = new2022, aes(label = area_name3), colour = "black", 
+               size = 3)
 
 #' # Uganda lakes shapefile
 #' * Sent by Jotham Mubangizi on 27 April 2020; unknown source
@@ -140,7 +160,6 @@ sf::write_sf(uga_areas, "uga_areas.geojson", delete_dsn = TRUE)
 
 
 #' Plot hierarchy
-
 hierarchy_plot <- plot_area_hierarchy_summary(uga_areas)
 
 ggsave("uga_area_hierarchy.png", hierarchy_plot, h = 6, w = 12)
