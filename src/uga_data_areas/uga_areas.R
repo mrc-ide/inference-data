@@ -3,12 +3,11 @@
 #' Levels:
 #'   * 1: Region (10)
 #'   * 2: Sub-region (15)
-#'   * 2: District (145)
+#'   * 2: District (146)
 #' Spectrum: National (level 0)
 #' EPP: National (level 0)
 #' EPP Urban/Rural: Yes
 #' PEPFAR PSNU: District (level 2)
-
 dir.create("check")
 
 #' Authenticate SharePoint login
@@ -40,8 +39,8 @@ uga_2022 <- ubos2022 %>%
   mutate(area_name3 = str_to_sentence(area_name3), 
          area_name3 = recode(area_name3, 
                              "Kassnda" = "Kassanda", 
-                             "Namutunmba" = "Namutumba", 
-                             "Masaka city" = "Masaka")) %>%
+                             "Namutunmba" = "Namutumba",
+                             "Masaka city" = "Masaka City")) %>%
   left_join(heirarchy %>%
               mutate(area_name3 = recode(area_name3, 
                                          "AruaCity" = "Arua city", 
@@ -75,7 +74,6 @@ uga_simple2022 <- ms_simplify(uga_2022, keep = 0.1) %>%
 object_size(uga_simple2022)
 
 st_is_valid(uga_simple2022)
-
 
 
 # Plot new districts 
@@ -155,9 +153,6 @@ uga_areas <- uga_long %>%
 
 #' Save boundaries
 sf::write_sf(uga_areas, "uga_areas.geojson", delete_dsn = TRUE)
-
-
-
 
 #' Plot hierarchy
 hierarchy_plot <- plot_area_hierarchy_summary(uga_areas)
