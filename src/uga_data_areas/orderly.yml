@@ -14,7 +14,11 @@ artefacts:
       description: Check boundaries
       filenames:
         - uga_area_hierarchy.png
-
+  - staticgraph:
+      description: New districts 2023
+      filenames:
+        - uga_new_districts_2023.png
+        
 displayname: UGA area hierarchy dataset
 
 packages:

@@ -157,9 +157,17 @@ sf::write_sf(uga_areas, "uga_areas.geojson", delete_dsn = TRUE)
 #' Plot hierarchy
 hierarchy_plot <- plot_area_hierarchy_summary(uga_areas)
 
-ggsave("uga_area_hierarchy.png", hierarchy_plot, h = 6, w = 12)
+# Plot new districts 
+new <- ggplot() +
+  geom_sf(data = uga_long %>% filter(area_level == 2)) +
+  geom_sf(data = new2022, aes(fill = area_name2)) +
+  geom_sf_text(data = new2022, aes(label = area_name3), colour = "black", 
+               size = 3) +
+  naomi::th_map()
+  
+ggsave("uga_new_districts_2023.png", new, h = 6, w = 8)
 
-
+# Add in brdieg between Masaka and Kalangala
 masaka <- filter(uga_areas, area_name == "Masaka")$geometry
 kalangala <- filter(uga_areas, area_name == "Kalangala")$geometry
 
