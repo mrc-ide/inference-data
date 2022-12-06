@@ -46,6 +46,9 @@ areas <- ids %>%
     by = "parent_area_id_ADR"
   ) %>%
   mutate(
+    area_name = area_name %>%
+      sub(" State", "", .) %>%
+      sub(" County", "", .),
     area_level_label = area_level %>%
       recode(`0` = "Country", `1` = "State", `2` = "County"),
     spectrum_level = as.logical(area_level == 0),
