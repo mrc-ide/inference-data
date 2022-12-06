@@ -6,64 +6,70 @@ sf::sf_use_s2(FALSE)
 #' Authenticate SharePoint login
 sharepoint <- spud::sharepoint$new(Sys.getenv("SHAREPOINT_URL"))
 
-path <- "Shared Documents/Data/naomi-raw/SSD/2022-03-13 humdata-shapefile/ssd_adm_imwg_nbs_20220121.zip"
+path_sh <- "Shared Documents/Data/naomi-raw/SSD/2022-12-05_DHIS_boundaries/areas.json"
+path_sh <- file.path("sites", Sys.getenv("SHAREPOINT_SITE"), path_sh)
 
-path <- file.path("sites", Sys.getenv("SHAREPOINT_SITE"), path)
+path_id <- "Shared Documents/Data/naomi-raw/SSD/2022-12-05_DHIS_boundaries/location_hierarchy_with-assigned-suffixes.csv"
+path_id <- file.path("sites", Sys.getenv("SHAREPOINT_SITE"), path_id)
 
-files <- sharepoint$download(path)
+file_sh <- sharepoint$download(path_sh)
+file_id <- sharepoint$download(path_id)
 
-tempdir <- tempdir()
-unzip(files, exdir = tempdir)
-admin0 <- read_sf(file.path(tempdir, "ssd_admbnda_adm0_imwg_nbs_20210924.shp")) %>%
-  rename(area_name = ADM0_EN) %>%
-  mutate(area_id = "SSD",
-         area_level = 0,
-         area_level_label = "Country",
-         spectrum_level = TRUE,
-         epp_level = TRUE,
-         naomi_level = FALSE,
-         pepfar_psnu_level = FALSE,
-         display = TRUE)
+ids <- read_csv(file_id)
+sh <- read_sf(file_sh)
 
-admin1 <- read_sf(file.path(tempdir, "ssd_admbnda_adm1_imwg_nbs_20210924.shp")) %>%
-  rename(area_name = ADM1_EN) %>%
-  mutate(area_id = paste0("SSD_1_", row_number()))
+#' NOTES (6 December 2022; at UNAIDS workshop):
+#' * District list has 80 counties; shape file only has 79 counties.
+#' * Akoka County (SSD_2_15) is missing from the boundaries file
+#' * Discussed with SSD team at workshop.
+#'   - They are still waiting for official boundaries from statistics bureau.
+#'   - DHIS only has data for the 79 districts
+#'   - ACTION: use only 79 districts for now.
 
-admin1 <- admin1 %>%
-  select(area_id, area_name, geometry) %>%
-  mutate(parent_area_id = "SSD",
-         area_level = 1,
-         area_level_label = "State",
-         spectrum_level = FALSE,
-         epp_level = FALSE,
-         naomi_level = FALSE,
-         pepfar_psnu_level = FALSE,
-         display = TRUE)
+st_is_valid(sh)
 
-admin2 <- read_sf(file.path(tempdir, "ssd_admbnda_adm2_imwg_nbs_20180817.shp")) %>%
-  rename(area_name = ADM2_EN) %>%
-  mutate(area_id = paste0("SSD_2_", row_number()))
+sh <- st_make_valid(sh)
 
-admin2 <- admin2 %>%
-  select(area_id, area_name, geometry, parent_area_name = ADM1_EN) %>%
-  left_join(admin1 %>% select(parent_area_name = area_name, parent_area_id = area_id) %>% st_drop_geometry()) %>%
-  select(area_id, area_name, parent_area_id) %>%
-  mutate(area_level = 2,
-         area_level_label = "County",
-         spectrum_level = FALSE,
-         epp_level = FALSE,
-         naomi_level = TRUE,
-         pepfar_psnu_level = TRUE,
-         display = TRUE)
+#' Add national (level 0) boundary
 
-areas <- admin0 %>%
-  bind_rows(admin1, admin2) %>%
-  mutate(area_sort_order = row_number(),
-         spectrum_region_code = NA,
-         center = st_centroid(geometry),
-         center_x = do.call(rbind, center)[,1],
-         center_y = do.call(rbind, center)[,2]) %>%
+sh0 <- sh %>%
+  filter(area_level == 1) %>%
+  group_by(area_id = "SSD_0_1", area_name = "South Sudan", area_level = 0) %>%
+  summarise(.groups = "drop")
+
+sh$area_level <- as.integer(sh$area_level)
+sh <- bind_rows(sh0, sh)
+
+areas <- ids %>%
+  left_join(
+    select(ids, parent_area_id_ADR = area_id_ADR, parent_area_id = area_id),
+    by = "parent_area_id_ADR"
+  ) %>%
+  mutate(
+    area_level_label = area_level %>%
+      recode(`0` = "Country", `1` = "State", `2` = "County"),
+    spectrum_level = as.logical(area_level == 0),
+    epp_level = as.logical(area_level == 0),    
+    naomi_level = as.logical(area_level == 2),
+    pepfar_psnu_level = as.logical(area_level == 2)
+  ) %>%
+  left_join(
+    sh %>%
+      select(area_id_ADR = area_id),
+    by = "area_id_ADR"
+  ) %>%
+  mutate(
+    area_sort_order = row_number(),
+    spectrum_region_code = 0,
+    center = st_centroid(geometry),
+    center_x = do.call(rbind, center)[,1],
+    center_y = do.call(rbind, center)[,2],
+    display = TRUE
+  ) %>%
+  st_as_sf() %>%
   select(area_id, area_name, area_level, parent_area_id, area_sort_order, center_x, center_y, spectrum_region_code, area_level_label, display, spectrum_level, epp_level, naomi_level, pepfar_psnu_level) %>%
   st_make_valid()
+
+areas <- filter(areas, !st_is_empty(areas))
 
 st_write(areas,"ssd_areas.geojson", delete_dsn = TRUE)
