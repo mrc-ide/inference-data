@@ -30,6 +30,11 @@ st_is_valid(sh)
 
 sh <- st_make_valid(sh)
 
+
+#' Get rid of fragments created by st_make_valid()
+table(st_geometry_type(sh))
+sh <- st_collection_extract(sh, "POLYGON")
+
 #' Add national (level 0) boundary
 
 sh0 <- sh %>%
@@ -70,8 +75,7 @@ areas <- ids %>%
     display = TRUE
   ) %>%
   st_as_sf() %>%
-  select(area_id, area_name, area_level, parent_area_id, area_sort_order, center_x, center_y, spectrum_region_code, area_level_label, display, spectrum_level, epp_level, naomi_level, pepfar_psnu_level) %>%
-  st_make_valid()
+  select(area_id, area_name, area_level, parent_area_id, area_sort_order, center_x, center_y, spectrum_region_code, area_level_label, display, spectrum_level, epp_level, naomi_level, pepfar_psnu_level) 
 
 areas <- filter(areas, !st_is_empty(areas))
 
