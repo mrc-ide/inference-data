@@ -1,0 +1,31 @@
+script: eri_areas.R
+
+parameters:
+  version:
+    default: "2022"
+
+artefacts:
+  - data:
+      description: area hierarchy dataset
+      filenames:
+        - ago_areas.geojson
+
+
+  - staticgraph:
+      description: Check boundaries
+      filenames:
+        - check/ago-hierarchy-plot.png
+
+displayname: AGO Make area hierarchy dataset
+
+packages:
+  - spud
+  - dplyr
+  - sf
+  - pryr
+  - naomi.utils
+  - naomi
+  - readr
+  - ggplot2
+  - rmapshaper
+
