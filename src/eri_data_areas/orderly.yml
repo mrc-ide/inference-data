@@ -8,15 +8,15 @@ artefacts:
   - data:
       description: area hierarchy dataset
       filenames:
-        - ago_areas.geojson
+        - eri_areas.geojson
 
 
   - staticgraph:
       description: Check boundaries
       filenames:
-        - check/ago-hierarchy-plot.png
+        - check/eri-hierarchy-plot.png
 
-displayname: AGO Make area hierarchy dataset
+displayname: ERI Make area hierarchy dataset
 
 packages:
   - spud
