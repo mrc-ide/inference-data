@@ -19,7 +19,7 @@ parameters:
   iso3:
     default: ~
   version:
-    default: 2021
+    default: 2022
 
 
 ## To add a new country to this task, add it to the dependency below and
