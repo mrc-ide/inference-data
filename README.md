@@ -11,6 +11,8 @@ The master branch is associated with an Estimates year, using the orderly task p
 
 **Ensure that all downstream tasks using master dataset tasks use a version parameter to avoid crossing datasets between different years**
 
+The current up-to-date version to pull is: 2022.
+
 ## Using the orderly web remote
 
 See https://www.vaccineimpact.org/orderly/articles/remote.html#interacting-with-the-remote-server
