@@ -73,6 +73,10 @@ depends:
     id: latest(parameter:version == version)
     use:
       depends/eth_areas.geojson: eth_areas.geojson
+  eri_data_areas:
+    id: latest(parameter:version == version)
+    use:
+      depends/eri_areas.geojson: eri_areas.geojson
   gab_data_areas:
     id: latest(parameter:version == version)
     use:
