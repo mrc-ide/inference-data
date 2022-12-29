@@ -19,7 +19,9 @@ city_province_map <- cities %>%
           largest = TRUE) %>%
   st_drop_geometry() %>%
   dplyr::select(area_name = city_name,
-         area_id = city_id,
+         # area_id = city_id,
+         city_id,
+         area_id,
          province = area_name)
 
 write_csv(city_province_map, "city_province_map.csv")
