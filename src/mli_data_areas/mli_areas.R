@@ -8,6 +8,11 @@
 
 dir.create("check")
 
+## sf v 1.0.0 update changes to use s2 spherical geometry as default
+## This creates issues for DHS coordinate data extraction scripts
+## Revert back to planar geometry
+sf::sf_use_s2(FALSE)
+
 #' Authenticate SharePoint login
 sharepoint <- spud::sharepoint$new("https://imperiallondon.sharepoint.com/")
 
@@ -36,7 +41,7 @@ raw <- read_sf_zip(files$raw) %>%
 # summarise geometry to regional level
 
 mli_simple <- raw %>%
-  group_by(area_name1) %>%
+  group_by(area_name0, area_id0, area_id1, area_name1) %>%
   summarise(geometry = st_cast(st_union(geometry))) %>%
   ms_simplify(., keep = 0.1) %>%
   st_transform(3857) %>%
@@ -44,7 +49,7 @@ mli_simple <- raw %>%
   sf::st_make_valid() %>%
   st_transform(4326)
 
-pryr::object_size(mli_regional)
+pryr::object_size(mli_simple)
 
 # Check that regional boundaries aggregate up to national level
 mli_simple %>%
@@ -54,10 +59,13 @@ mli_simple %>%
 p_compare_boundaries <- compare_boundaries(raw, mli_simple) +
   ggtitle("Mali regional boundaries")
 
-ggsave("check/lbr-district-boundaries-reduced.png", p_compare_boundaries, h = 6, w = 4.5)
+ggsave("check/mli-district-boundaries-reduced.png", p_compare_boundaries, h = 6, w = 4.5)
 
-mli_long <- mli_regional %>%
+id_map <- read_csv(files$id_map)
+
+mli_long <- mli_simple %>%
   rename_all(~sub("area\\_", "", .)) %>%
+  mutate(spectrum_region_code = 0) %>%
   gather_areas()
 
 stopifnot(st_is_valid(mli_long))
@@ -66,7 +74,7 @@ stopifnot(st_geometry_type(mli_long) %in% c("POLYGON", "MULTIPOLYGON"))
 #' Replace old area IDs with 2021 area IDs
 id_map <- read_csv(files$id_map)
 
-mli <- mli_long%>%
+mli <- mli_long %>%
   mutate(across(c(area_id,parent_area_id),
                 ~id_map$area_id_2021[match(., id_map$area_id)]))
 
