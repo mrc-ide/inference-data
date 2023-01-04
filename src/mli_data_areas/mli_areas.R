@@ -1,9 +1,6 @@
 #' ## Mali (MLI)
 #' Source:
-#'   * 1: Region (12)
-#'   * 2: Cercles (50)
-#'   * 3: Arrondissement (289)
-#'   * 4: Commune (704)
+#'   * 1: Region (11)
 #' Spectrum:
 #' EPP:
 #' EPP Urban/Rural:
@@ -11,63 +8,73 @@
 
 dir.create("check")
 
+## sf v 1.0.0 update changes to use s2 spherical geometry as default
+## This creates issues for DHS coordinate data extraction scripts
+## Revert back to planar geometry
+sf::sf_use_s2(FALSE)
+
 #' Authenticate SharePoint login
 sharepoint <- spud::sharepoint$new("https://imperiallondon.sharepoint.com/")
 
 #' Read in files from SharePoint
 naomi_raw_path <- "sites/HIVInferenceGroup-WP/Shared%20Documents/Data/naomi-raw"
 
-urls <- list(raw = "MLI/2021-01-21/D%C3%A9coupage%20administratif%20Mali.zip",
-             id_map = "MLI/2021-01-21/mli_area_id_map_2021.csv"
+urls <- list(raw = "MLI/2021-03-10/Mali.zip",
+             id_map = "MLI/2021-03-10/mli_area_id_map_2021.csv"
 ) %>%
   lapply(function(x) file.path(naomi_raw_path, x)) %>%
   lapply(URLencode)
 
 files <- lapply(urls, sharepoint$download)
 
-## sf v 1.0.0 update changes to use s2 spherical geometry as default
-## This creates issues for DHS coordinate data extraction scripts
-## Revert back to planar geometry
-sf::sf_use_s2(FALSE)
-
 # Read in files from Sharepoint
-raw <- read_sf_zip(files$raw, "adm4.*shp$")
+raw <- read_sf_zip(files$raw) %>%
+  select(area_name1 = ADM1_NAME, geometry) %>%
+  mutate(area_name0 = "Mali",
+         area_id0 = "MLI",
+         area_name1 = str_to_sentence(area_name1),
+         region_rank = dense_rank(as_factor(area_name1)),
+         area_id1 = paste0("MLI_1_", str_pad(region_rank, 2, pad = "0")),
+         spectrum_region_code = 0L) %>%
+  select(area_id0, area_name0, area_id1, area_name1, spectrum_region_code)
 
-mli_clean <- raw %>%
-  select(id0 = ISO, name0 = NAME_0,
-         id1 = ID_1, name1 = NAME_1,
-         id2 = ID_2, name2 = NAME_2,
-         id3 = ID_3, name3 = NAME_3,
-         id4 = ID_4, name4 = NAME_4
-         ) %>% mutate(
-           id1 = paste0("MLI_1_", id1),
-           id2 = paste0("MLI_2_", id2),
-           id3 = paste0("MLI_3_", id3),
-           id4 = paste0("MLI_4_", id4)
-         )
+# summarise geometry to regional level
 
-mli_long <- mli_clean %>%
-  mutate(spectrum_region_code = 0L) %>%
+mli_simple <- raw %>%
+  group_by(area_name0, area_id0, area_id1, area_name1) %>%
+  summarise(geometry = st_cast(st_union(geometry))) %>%
+  ms_simplify(., keep = 0.1) %>%
+  st_transform(3857) %>%
+  st_snap(., ., tolerance = 600) %>%
+  sf::st_make_valid() %>%
+  st_transform(4326)
+
+pryr::object_size(mli_simple)
+
+# Check that regional boundaries aggregate up to national level
+mli_simple %>%
+  st_union() %>%
+  plot()
+
+p_compare_boundaries <- compare_boundaries(raw, mli_simple) +
+  ggtitle("Mali regional boundaries")
+
+ggsave("check/mli-district-boundaries-reduced.png", p_compare_boundaries, h = 6, w = 4.5)
+
+id_map <- read_csv(files$id_map)
+
+mli_long <- mli_simple %>%
+  rename_all(~sub("area\\_", "", .)) %>%
+  mutate(spectrum_region_code = 0) %>%
   gather_areas()
 
 stopifnot(st_is_valid(mli_long))
 stopifnot(st_geometry_type(mli_long) %in% c("POLYGON", "MULTIPOLYGON"))
 
-#' Simplify boundaries to reduce file size (if > 1Mb)
-pryr::object_size(mli_long)
-
-mli_simple <- ms_simplify(mli_long, keep = 0.08)
-pryr::object_size(mli_simple)
-
-p_compare_boundaries <- compare_boundaries(mli_long, mli_simple) +
-  ggtitle("Mali district boundaries")
-
-ggsave("check/mli-district-boundaries-reduced.png", p_compare_boundaries, h = 6, w = 4.5)
-
 #' Replace old area IDs with 2021 area IDs
 id_map <- read_csv(files$id_map)
 
-mli <- mli_simple %>%
+mli <- mli_long %>%
   mutate(across(c(area_id,parent_area_id),
                 ~id_map$area_id_2021[match(., id_map$area_id)]))
 
@@ -83,10 +90,7 @@ mli_areas <- mli %>%
          center = NULL,
          area_level_label = area_level %>%
            recode(`0` = "Country",
-                  `1` = "Region",
-                  `2` = "Cercles",
-                  `3` = "Arrondissement",
-                  `4` = "Commune"),
+                  `1` = "Region"),
          display = TRUE) %>%
   select(area_id, area_name, parent_area_id, area_level, area_level_label,
          spectrum_region_code, display, area_sort_order,
@@ -99,3 +103,5 @@ sf::st_write(mli_areas, "mli_areas.geojson", delete_dsn = TRUE)
 #' Plot hierarchy
 hierarchy_plot <- plot_area_hierarchy_summary(mli_areas)
 ggsave("check/mli-hierarchy-plot.png", hierarchy_plot, h = 6, w = 12)
+
+dev.off()
