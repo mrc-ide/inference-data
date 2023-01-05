@@ -4,7 +4,7 @@ areas <- read_sf("depends/naomi_areas.geojson")%>%
   mutate(iso3 = iso3) %>%
   st_make_valid()
 
-area_lvl_mapping <- read_csv("iso_mapping_fit.csv", show_col_types = FALSE)
+area_lvl_mapping <- read_csv("resources/iso_mapping_fit.csv", show_col_types = FALSE)
 admin1_lvl <- area_lvl_mapping$admin1_level[area_lvl_mapping$iso3 == iso3_c]
 
 population <- read_csv("depends/interpolated_population.csv")
