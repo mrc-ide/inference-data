@@ -34,6 +34,9 @@ packages:
 
 resources:
   - merge_cities.geojson
+  
+global_resources:
+  resources/iso_mapping_fit.csv: iso_mapping_fit.csv
 
 depends:
   aaa_areas_pull:
