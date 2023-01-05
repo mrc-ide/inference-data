@@ -4,6 +4,9 @@ areas <- read_sf("depends/naomi_areas.geojson")%>%
   mutate(iso3 = iso3) %>%
   st_make_valid()
 
+area_lvl_mapping <- read_csv("resources/iso_mapping_fit.csv", show_col_types = FALSE)
+admin1_lvl <- area_lvl_mapping$admin1_level[area_lvl_mapping$iso3 == iso3_c]
+
 population <- read_csv("depends/interpolated_population.csv")
 
 cities <- read_sf("merge_cities.geojson") %>%
@@ -15,7 +18,7 @@ cities <- read_sf("merge_cities.geojson") %>%
 city_province_map <- cities %>%
   rename(city_name = area_name,
                  city_id = area_id) %>%
-  st_join(areas %>% filter(area_level ==1), 
+  st_join(areas %>% filter(area_level == admin1_lvl), 
           largest = TRUE) %>%
   st_drop_geometry() %>%
   dplyr::select(area_name = city_name,
