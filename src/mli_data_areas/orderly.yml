@@ -30,4 +30,5 @@ packages:
   - ggplot2
   - stringr
   - rmapshaper
+  - haven
 
