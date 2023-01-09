@@ -25,7 +25,12 @@ city_province_map <- cities %>%
          # area_id = city_id,
          city_id,
          area_id,
-         province = area_name)
+         province = area_name) %>%
+  mutate(
+    area_id = ifelse(area_name == "bamako" & iso3 == "MLI", "MLI_1_10ks", area_id),
+    province = ifelse(area_name == "bamako" & iso3 == "MLI", "Bamako", province)
+  )
+         
 
 write_csv(city_province_map, "city_province_map.csv")
 
@@ -43,7 +48,10 @@ if(nrow(cities)) {
     rename(city_area_id = area_id) %>%
     st_join(areas %>% 
               filter(area_level == max(area_level)) %>%
-              dplyr::select(area_id), largest = TRUE)
+              dplyr::select(area_id), largest = TRUE) %>%
+    mutate(
+      area_id = ifelse(area_name == "bamako" & iso3 == "MLI", "MLI_1_10ks", area_id)
+    )
   
   age_sex_distribution <- population %>%
     filter(area_id %in% age_distribution_match$area_id,
