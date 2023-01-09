@@ -161,7 +161,7 @@ zmb_wide <- zmb_wide %>%
   #' Districts moving back to historical provinces:
   #' Itezhi-tezhi: move from Central (ZMB_1_10) -> Southern (ZMB_1_17)
   #' Chama: move from Muchinga (ZMB_1_15) -> Eastern (ZMB_1_12)
-  #' Chirunda: move from Chilanga (ZMB_1_14) -> Southern (ZMB_1_17)
+  #' Chirundu: move from Chilanga (ZMB_1_14) -> Southern (ZMB_1_17)
   #' Update provincial boundaries for:
   #' Central (ZMB_1_10) -> "ZMB_1_10gh"
   #' Southern (ZMB_1_17) -> "ZMB_1_17xt"
@@ -171,11 +171,11 @@ zmb_wide <- zmb_wide %>%
   
   mutate(id1 = case_when(name2 == "Itezhi-tezhi" ~ "ZMB_1_17", 
                          name2 == "Chama" ~ "ZMB_1_12", 
-                         name2 == "Chirunda" ~ "ZMB_1_17", 
+                         name2 == "Chirundu" ~ "ZMB_1_17", 
                          TRUE ~ as.character(id1)), 
          name1 = case_when(name2 == "Itezhi-tezhi" ~ "Southern", 
                            name2 == "Chama" ~ "Eastern", 
-                           name2 == "Chirunda" ~ "Southern", 
+                           name2 == "Chirundu" ~ "Southern", 
                            TRUE ~ as.character(name1)), 
          id1 = case_when(id1 == "ZMB_1_10" ~"ZMB_1_10gh", 
                          id1 == "ZMB_1_12" ~"ZMB_1_12sg", 
