@@ -42,3 +42,8 @@ depends:
     id: latest(parameter:iso3 == iso3 && parameter:version == version)
     use:
       depends/naomi_areas.geojson: naomi_areas.geojson
+  cod_data_population-local:
+    id: latest
+    use:
+      depends/cod_population_local.csv: cod_population_local.csv
+
