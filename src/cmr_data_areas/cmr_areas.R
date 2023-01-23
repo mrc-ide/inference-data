@@ -32,13 +32,10 @@ urls <- list( humdata = "CMR/2020-01-06/cmr_admbnda_inc_20180104_shp.zip",
   lapply(function(x) file.path(naomi_raw_path, x)) %>%
   lapply(URLencode)
 
-files <- lapply(urls, sharepoint$download)
-
-
 humdata <- read_sf_zip_list(files$humdata) %>% bind_rows()
 pepfar <- read_sf_zip(files$pepfar)
 
-new <- read_sf_zip(files$dist_2022)
+new <- read_sf_zip(files$boundaries_2023)
 
 #' Health districts
 dist <- readxl::read_excel(files$dist, 1) %>%
@@ -165,7 +162,7 @@ district_boundaries_2023 <- read_sf_zip(files$boundaries_2023) %>%
                             "Garoua 2" = "Garoua II",       
                             "Garoua Boulaï" = "Garoua Boulai", 
                             "Gueré" = "Guere",            
-                            "Kumba" = "Kumba South",           
+                            "Kumba" = "Kumba-South",           
                             "Kumba North" = "Kumba-North",     
                             "Makari" = "Makary",         
                             "Mvog Ada" = "Mvog-Ada",       
@@ -177,38 +174,27 @@ district_boundaries_2023 <- read_sf_zip(files$boundaries_2023) %>%
                             "Tignère" = "Tignere",        
                             "Tokombéré" = "Tokombere",       
                             "Zoétele"  = "Zoetele")) %>%
-  left_join(district_names_2023 %>% select(area_id = area_id3, area_name)) %>%
-  st_as_sf()
+  left_join(district_names_2023) %>%
+  st_as_sf() %>%
+  select(area_id0, area_name0, area_id1, area_name1, area_id3, area_name3 = area_name)
+
+area_id1 = 12
+area_id3 = 197
 
 
 # Compare new boundaries to old boundaries
 district_boundaries_2022 <- cmr_areas_2022 %>% filter(area_level == 3) %>% st_as_sf()
+pryr::object_size(district_boundaries_2023)
 
 ggplot() +
   geom_sf(data = district_boundaries_2022, colour = "black", fill = NA) +
   geom_sf(data = district_boundaries_2023, colour = "red", fill = NA)
 
-
-                            
-                            
-                            
-                            
-                            
-
-
 district_boundaries_2023 %>% filter(is.na(area_id))
-
 
 new_districts <- filter(district_names_2023, is.na(area_name3))
 
-
-
 overlaps <- st_overlaps(districts_2022, new_districts)
-
-
-
-
-
 
 
 cmr_area_hierarchy <- cmr_areas %>%
