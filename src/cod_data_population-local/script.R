@@ -3,12 +3,27 @@ naomi_raw_path <- "sites/HIVInferenceGroup-WP/Shared%20Documents/Data/naomi-raw/
 
 url <- file.path(naomi_raw_path, "COD/2021-04-14/cod-district-populaton_2021-04-14.csv")
 file <- sharepoint$download(url)
-df <- read_csv(file)
 
-#' Dependencies 
-areas <- read_sf("depends/cod_areas.geojson")
+# Update with 2022 area_ids
+df <- read_csv(file) %>%
+  mutate(area_id1 = recode(area_id,
+                           "COD_1_3" = "COD_1_3xd",
+                           "COD_1_15" = "COD_1_15sl"),
+    area_id2 = recode(area_id2,
+                           "COD_2_15" = "COD_2_15td",
+                            "COD_2_90" = "COD_2_90hs"))
+
+#' Dependencies
+areas <- read_sf("depends/naomi_areas.geojson")
 worldpop <- read_csv("depends/population_worldpop_naomi.csv")
 
+filter(worldpop, population == 0) %>%
+  group_by(area_id) %>% summarise()
+
+#' Worldpop population is 0 for the following districts:
+ # COD_3_413, COD_3_414, COD_3_418, COD_3_420, COD_3_422
+
+#  Redistribute Worldpop totals at the admin2 level
 areas <- st_drop_geometry(areas)
 
 worldpop_dist <- worldpop %>%
@@ -25,20 +40,18 @@ pop <- df %>%
   full_join(worldpop_dist, by = c("area_id2" = "area_id")) %>%
   mutate(population = `ZS pop` * proportion)
 
-stopifnot(!is.na(df$population))
+filter(pop, is.na(population)) %>% as.data.frame()
+
+
 stopifnot(sum(df[["ZS pop"]]) == sum(pop$population))
 
-
 #' Aggregate to all levels
-
 pop_agesex <- pop %>%
   mutate(
     source = "Unknown",
     calendar_quarter = "CY2019Q2"
   )
 
-
-    
 pop_agesex <- pop_agesex %>%
   {bind_rows(
      count(., area_id = area_id0, source, calendar_quarter, sex, age_group,
@@ -48,7 +61,7 @@ pop_agesex <- pop_agesex %>%
      count(., area_id = area_id2, source, calendar_quarter, sex, age_group,
            wt = population, name = "population"),
      count(., area_id = area_id3, source, calendar_quarter, sex, age_group,
-           wt = population, name = "population")     
+           wt = population, name = "population")
    )}
 
 pop_agesex <- pop_agesex %>%
