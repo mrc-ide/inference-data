@@ -18,6 +18,7 @@ packages:
   - tidyr
   - readxl
   - forcats
+  - moz.utils
 
 parameters:
   iso3:
