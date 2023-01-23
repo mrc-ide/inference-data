@@ -20,6 +20,19 @@ if(iso3 == "COD") {
   
   cod_pop <- read.csv("depends/cod_population_local.csv")
   
+  cod_pop <- bind_rows(
+    cod_pop %>%
+      filter(iso3 == "COD"),
+    cod_pop %>%
+      filter(area_id != "COD") %>%
+      aggregate_to_admin(c("source", "calendar_quarter", "sex", "age_group"), indicators = "population", target_level = 1, areas),
+    cod_pop %>%
+      filter(area_id != "COD") %>%
+      aggregate_to_admin(c("source", "calendar_quarter", "sex", "age_group"), indicators = "population", target_level = 2, areas),
+    cod_pop %>% filter(iso3 != "COD")
+  )
+    
+  
   interpolated_worldpop_2019 <- crossing(area_id = areas$area_id,
                                          year = 2015:2020,
                                          sex = c("male", "female"),
@@ -39,7 +52,10 @@ if(iso3 == "COD") {
   district_prop <- cod_pop %>%
     filter(area_id %in% unique(missing_dist$area_id)) %>%
     left_join(spread_areas(areas) %>% select(area_id, area_id1) %>% st_drop_geometry()) %>%
-    left_join(cod_pop %>% filter(str_detect(area_id, "_1_")) %>% rename(area_id1 = area_id, area_id1_population = population) %>% select(area_id1, area_id1_population, sex, age_group)) %>%
+    left_join(cod_pop %>% 
+                filter(str_detect(area_id, "_1_")) %>% 
+                rename(area_id1 = area_id, area_id1_population = population) %>% 
+                select(area_id1, area_id1_population, sex, age_group)) %>%
     mutate(district_proportion_of_admin1 = population/area_id1_population)
   
   parent_missing <- unique(filter(spread_areas(areas), area_id %in% missing_dist$area_id)$area_id1)
