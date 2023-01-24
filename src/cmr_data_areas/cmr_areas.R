@@ -87,6 +87,7 @@ dir.create("check")
 
 ggsave("check/cmr-hierarchy-plot.png", hierarchy_plot, h = 6, w = 12)
 
+while (!is.null(dev.list())) dev.off()
 
 #' Save boundaries
 sf::st_write(cmr_areas_2022, "cmr_areas.geojson", delete_dsn = TRUE)
