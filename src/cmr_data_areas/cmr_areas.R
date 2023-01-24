@@ -80,7 +80,11 @@ cmr_areas_2022 <- cmr_long %>%
                                    `0` = "Pays",
                                    `1` = "Région",
                                    `2` = "District Sanitaire"),
-         display = TRUE) 
+         display = TRUE, 
+         area_sort_order = row_number()) %>%
+           select(area_id, area_name, parent_area_id, area_level, area_level_label,
+                  spectrum_region_code, display, area_sort_order,
+                  center_x, center_y, geometry)
 
 hierarchy_plot <- plot_area_hierarchy_summary(cmr_areas_2022)
 dir.create("check")
