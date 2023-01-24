@@ -64,7 +64,8 @@ district_boundaries_2023 <- read_sf_zip(files$boundaries_2023) %>%
   st_as_sf() %>%
   select(id1 = area_id1, name1 = area_name1,
          id2 = area_id3, name2 = area_name) %>%
-  mutate(id0 = "CMR", name0 = "Cameroon", spectrum_region_code = 0L) 
+  mutate(id0 = "CMR", name0 = "Cameroon", spectrum_region_code = 0L, 
+         id2 = str_replace(id2, "CMR_3", "CMR_2")) 
 
 cmr_simple <- district_boundaries_2023 %>%
   rmapshaper::ms_simplify(keep = 0.03)
