@@ -9,13 +9,13 @@ artefacts:
       description: area hierarchy dataset
       filenames:
         - cmr_areas.geojson
-        - cmr_area_hierarchy.csv
+
 
   - staticgraph:
       description: Check boundaries
       filenames:
         - check/cmr-hierarchy-plot.png
-        - check/check-overlay-north-region-fotokol.png
+
 
 displayname: CMR area hierarchy dataset
 
