@@ -2,7 +2,7 @@ script: gha_areas.R
 
 parameters:
   version:
-    default: "2022"
+    default: "2023"
 
 artefacts:
   - data:
@@ -14,10 +14,11 @@ artefacts:
       filenames:
         - gha_area_hierarchy.png
   - staticgraph:
-      description: Simplified boundary checks
+      description: Boundary checks
       filenames:
-        - check/ghana-district-boundaries-reduced.png
-        - check/greater-accra-district-boundaries-reduced.png
+        - check/Ghana-2021-2022-districts.png
+        - check/Ghana-2021-2022-regions.png
+        - check/Ghana-2022-snapped-regions.png
 
 displayname: GHA area hierarchy dataset
 
