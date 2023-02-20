@@ -1,12 +1,20 @@
 #' ## Cameroon (CMR)
 #' Source: UNAIDS
 #' Levels:
-#'   * 1: Région Sanitaire (12)
+#'   * 1: Région Sanitaire (10)
+#'   * 1: Région Sanitaire + Villes (12)
 #'   * 2: District Sanitaire  (197)
 #' Spectrum: National (level 0)
 #' EPP: National (level 0)
 #' EPP Urban/Rural:
 #' PEPFAR PSNU:
+#' 
+#' 2023 estimates update:
+# * Admin 0 = National (for National HIV estimates)
+# * Admin 1 = 10 régions (for PEPFAR COP planning and regional planning)
+# * Admin 2 = 10 régions + 2 villes (for regional planning and city level planning 
+#                                    as it also takes into account 2 major cities)
+# * Admin 3 = 197 districts for district level planning
 
 ## sf v 1.0.0 update changes to use s2 spherical geometry as default
 ## This creates issues for DHS coordinate data extraction scripts
@@ -70,7 +78,25 @@ district_boundaries_2023 <- read_sf_zip(files$boundaries_2023) %>%
 cmr_simple <- district_boundaries_2023 %>%
   rmapshaper::ms_simplify(keep = 0.03)
 
-cmr_long <- gather_areas(cmr_simple)
+cmr_wide <- cmr_simple %>%
+  select(name2 = name1, id3 = id2, name3 = name2, everything()) %>%
+  mutate(id3 = str_replace(id3, "CMR_2", "CMR_3"), 
+         name1 = recode(name2, 
+                        "Littoral (sans Douala)" = "Littoral", 
+                        "Douala" = "Littoral", 
+                        "Centre (sans Yaoundé)" = "Centre", 
+                        "Yaoundé" = "Centre")) %>%
+  arrange(name2) %>%
+  group_by(name1) %>%
+  mutate(id1 = paste0("CMR_1_", cur_group_id()), 
+         id2 = str_replace(id1, "CMR_1", "CMR_2"), 
+         id2 = case_when(name2 == "Douala" ~ "CMR_2_11", 
+                         name2 == "Yaoundé" ~ "CMR_2_12", 
+                         TRUE ~ id2)) %>%
+  select(id0, name0, id1, name1, id2, name2,id2, name3, everything()) %>%
+  arrange(name1, name2)
+
+cmr_long <- gather_areas(cmr_wide)
 
 cmr_areas_2022 <- cmr_long %>%
   mutate(center = sf::st_point_on_surface(geometry),
@@ -80,12 +106,16 @@ cmr_areas_2022 <- cmr_long %>%
          area_level_label = recode(area_level,
                                    `0` = "Pays",
                                    `1` = "Région",
-                                   `2` = "District Sanitaire"),
+                                   `2` = "Région + Villes",
+                                   `3` = "District Sanitaire"),
          display = TRUE, 
          area_sort_order = row_number()) %>%
            select(area_id, area_name, parent_area_id, area_level, area_level_label,
                   spectrum_region_code, display, area_sort_order,
                   center_x, center_y, geometry)
+
+
+
 
 hierarchy_plot <- plot_area_hierarchy_summary(cmr_areas_2022)
 dir.create("check")
