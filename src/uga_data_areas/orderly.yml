@@ -2,24 +2,24 @@ script: uga_areas.R
 
 parameters:
   version:
-    default: "2022"
+    default: "2023"
 
 artefacts:
   - data:
       description: area hierarchy dataset
       filenames:
         - uga_areas.geojson
-        - uga_area_boundaries.geojson
-        - uga_area_hierarchy.csv
-        - uga_area_levels.csv
         - uga_areas_kalangala-masaka-bridge.geojson
   - staticgraph:
       description: Check boundaries
       filenames:
         - uga_area_hierarchy.png
-
+  - staticgraph:
+      description: New districts 2023
+      filenames:
+        - uga_new_districts_2023.png
+        
 displayname: UGA area hierarchy dataset
-
 
 packages:
   - dplyr
