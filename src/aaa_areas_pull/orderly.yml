@@ -69,7 +69,7 @@ depends:
     id: latest(parameter:version == version)
     use:
       depends/cod_areas.geojson: cod_areas.geojson
-  eth_data_areas_2023:
+  eth_data_areas:
     id: latest(parameter:version == version)
     use:
       depends/eth_areas.geojson: eth_areas.geojson
