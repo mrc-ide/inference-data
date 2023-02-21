@@ -97,7 +97,8 @@ gha_clean <- gha_long %>%
   st_transform(3857) %>%
   st_snap(., ., tolerance = 50) %>%
   sf::st_make_valid() %>%
-  st_transform(4326)
+  st_transform(4326) %>%
+  st_cast(.,"MULTIPOLYGON")
 
 p <- ggplot() +
   geom_sf(data = gha_long %>% filter(area_level == 1), fill = NA, color = "black") +
