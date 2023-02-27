@@ -19,9 +19,3 @@ packages:
   - spud
   - readr
   - sf
-
-depends:
-  zaf_data_areas:
-    id: latest
-    use:
-      depends/zaf_areas.geojson: zaf_areas.geojson
