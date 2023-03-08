@@ -152,7 +152,8 @@ areas2023 <- areas2023 %>%
       select(area_id2022 = area_id, spectrum_region_code, area_sort_order),
     by = "area_id2022"
   ) %>%
-  arrange(area_sort_order)
+  arrange(area_sort_order) %>%
+  mutate(spectrum_region_code = if_else(area_id2023 %in% c("ETH_2_168wv", "ETH_2_169xy", "ETH_2_170lk"), 12, spectrum_region_code))
 
 eth_areas2023 <- areas2023 %>%
   mutate(
