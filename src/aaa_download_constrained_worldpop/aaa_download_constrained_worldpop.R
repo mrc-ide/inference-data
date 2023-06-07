@@ -10,10 +10,7 @@ admin1_lvl <- area_lvl_mapping$admin1_level[area_lvl_mapping$iso3 == iso3_c]
 population <- read_csv("depends/interpolated_population.csv")
 
 cities <- read_sf("merge_cities.geojson") %>%
-  filter(iso3 == iso3_c) %>%
-  arrange(area_name) %>%
-  mutate(area_id = paste0(iso3, "_city_", row_number())) %>%
-  st_make_valid()
+  filter(iso3 == iso3_c)
 
 city_province_map <- cities %>%
   rename(city_name = area_name,
