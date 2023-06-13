@@ -25,6 +25,8 @@ parameters:
     default: ~
   version:
     default: 2022
+  source:
+    default: "WPP2019"
 
 
 # global_resources:
