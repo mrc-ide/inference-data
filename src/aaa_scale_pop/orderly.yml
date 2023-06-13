@@ -26,8 +26,8 @@ parameters:
   version:
     default: 2022
   source:
-    default: "WPP2019"
 
+    default: "WPP2022"
 
 # global_resources:
 #   resources/iso_mapping_fit.csv: iso_mapping_fit.csv
