@@ -75,47 +75,31 @@ if(iso3 == "COD") {
   
 }
 
-
-
 sharepoint <- spud::sharepoint$new(Sys.getenv("SHAREPOINT_URL"))
+path <- file.path("sites", Sys.getenv("SHAREPOINT_SITE"), "Shared Documents/Data/population/WPP2022", "WPP2022_PopulationBySingleAgeSex_Medium_1950-2021.zip")
+unzip(path, exdir = tempdir())
+wpp_pop <- read_csv(file.path(tempdir(), "WPP2022_PopulationBySingleAgeSex_Medium_1950-2021.csv"))
+colnames(wpp_pop) <- tolower(colnames(wpp_pop))
 
-f_path <- file.path("sites", Sys.getenv("SHAREPOINT_SITE"), "Shared Documents/Data/population/WPP2019", "WPP2019_POP_F15_3_ANNUAL_POPULATION_BY_AGE_FEMALE.xlsx")
-m_path <- file.path("sites", Sys.getenv("SHAREPOINT_SITE"), "Shared Documents/Data/population/WPP2019", "WPP2019_POP_F15_2_ANNUAL_POPULATION_BY_AGE_MALE.xlsx")
-
-wpp_pop_f <- sharepoint_download(sharepoint_url = Sys.getenv("SHAREPOINT_URL"), sharepoint_path = f_path)
-wpp_pop_m <- sharepoint_download(sharepoint_url = Sys.getenv("SHAREPOINT_URL"), sharepoint_path = m_path)
-
-wpp_pop_f <- readxl::read_excel(wpp_pop_f, "ESTIMATES", skip = 16, na = "...")
-wpp_pop_m <- readxl::read_excel(wpp_pop_m, "ESTIMATES", skip = 16, na = "...")
-
-wpp_pop <- wpp_pop_f %>%
-  mutate(sex = "female") %>%
-  bind_rows(
-    wpp_pop_m %>% mutate(sex = "male")
-  ) %>%
-  rename(index = 1, variant = 2, country = 3, notes = 4, countrycode = 5, area_type = 6, parent_code = 7, year = 8) %>%
-  left_join(
-    countrycode::codelist %>% select(countrycode = iso3n, iso3 = iso3c),
-    by = "countrycode"
-  ) %>%
+wpp_pop <- wpp_pop %>%
+  rename(year = time,
+         iso3 = iso3_code) %>%
   filter(iso3 == iso3_c,
-         year %in% 1995:2020,
-         !(year == 2020 & variant == "Medium variant")) %>%
-  select(-c(index:parent_code)) %>%
-  type.convert() %>%
-  pivot_longer(-c(iso3, sex, year), names_to = "age_group_label", values_to = "pop") %>%
-  mutate(age_group_label = age_group_label %>% 
-           fct_collapse("80+" = c("80+", "80-84", "85-89", "90-94", "95-99", "100+")) %>%
-           fct_relevel(c(paste0(0:15*5, "-", 0:15*5+4), "80+"))) %>%
-  left_join(get_age_groups() %>% select(age_group, age_group_label)) %>%
-  count(iso3, year, sex, age_group, source = "wpp19", wt = 1e3*pop, name = "population") %>%
+         year %in% 1995:2020) %>%
+  select(-poptotal) %>%
+  pivot_longer(cols = c(popmale, popfemale), names_to = "sex", values_to = "population") %>%
+  mutate(sex = str_remove(sex, "pop"),
+         agegrp = str_remove(agegrp, "\\+")) %>%
+  type.convert(as.is = T) %>%
+  mutate(age_group = naomi::cut_naomi_age_group(agegrp)) %>%
+  count(iso3, year, sex, age_group, source = "wpp22", wt = 1e3*population, name = "population") %>%
   mutate(population = if_else(is.nan(population), 0, population))
 
 #' Target size for age/sex
 agesex_pop <- wpp_pop %>%
   filter(year %in% unique(worldpop$year)) %>%
   select(-source) %>%
-  rename(wpp19pop = population)
+  rename(wpp22pop = population)
 
 #' Target population by area
 area_pop <- worldpop %>%
@@ -130,11 +114,11 @@ area_pop <- worldpop %>%
   mutate(target_area_pop = target_area_pop * n,
          n = NULL)
 
-pop_wpp19 <- worldpop %>%
+pop_wpp22 <- worldpop %>%
   left_join(agesex_pop) %>%
   left_join(area_pop) %>%
   # left_join(areas %>% select(area_id, area_level)) %>%
-  mutate(source = paste0(source, "_wpp19"),
+  mutate(source = paste0(source, "_wpp22"),
          population_base = population)
 
 #' Do four iterations of proportional fitting
@@ -142,9 +126,9 @@ pop_wpp19 <- worldpop %>%
 for(i in 1:4) {
   print(paste("iteration", i))
   
-  pop_wpp19 <- pop_wpp19 %>%
+  pop_wpp22 <- pop_wpp22 %>%
     group_by(iso3, source, year, area_level, sex, age_group) %>%
-    mutate(ratio_wpp = wpp19pop / sum(population),
+    mutate(ratio_wpp = wpp22pop / sum(population),
            population = population * ratio_wpp) %>%
     group_by(iso3, source, area_id, year) %>%
     mutate(ratio_area = target_area_pop / sum(population),
@@ -152,7 +136,7 @@ for(i in 1:4) {
     ungroup
   
   print(
-    pop_wpp19 %>% 
+    pop_wpp22 %>% 
       summarise(min_age = min(ratio_wpp, na.rm=TRUE),
                 max_age = max(ratio_wpp, na.rm=TRUE),
                 min_area = min(ratio_area, na.rm=TRUE),
@@ -163,13 +147,25 @@ for(i in 1:4) {
 interpolated_populations <- crossing(area_id = areas$area_id,
          year = 1995:2020,
          sex = c("male", "female"),
-         age_group = unique(pop_wpp19$age_group)) %>%
-  left_join(pop_wpp19 %>% select(area_id, year, sex, age_group, population)) %>%
+         age_group = unique(pop_wpp22$age_group)) %>%
+  left_join(pop_wpp22 %>% select(area_id, year, sex, age_group, population)) %>%
   group_by(area_id, sex, age_group) %>%
   mutate(population = log(population),
          population = zoo::na.approx(population, na.rm=FALSE),
          population = exp(population)) %>%
   fill(population, .direction = "up")
-  
 
+extrap_pop <- interpolated_populations %>%
+  filter(year %in% 2015:2020, !is.na(population)) %>%
+  group_by(area_id, age_group, sex) %>%
+  mutate(
+    population = log(population),
+    population = exp(Hmisc::approxExtrap(year, population, xout = 2020:2025)$y),
+    year = year + 5)
+
+interpolated_populations <- bind_rows(
+  interpolated_populations,
+  extrap_pop
+)
+  
 write_csv(interpolated_populations, "interpolated_population.csv")
