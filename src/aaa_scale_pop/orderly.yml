@@ -19,6 +19,7 @@ packages:
   - readxl
   - forcats
   - moz.utils
+  - Hmisc
 
 parameters:
   iso3:
