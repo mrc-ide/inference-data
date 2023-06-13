@@ -77,7 +77,9 @@ if(iso3 == "COD") {
 
 sharepoint <- spud::sharepoint$new(Sys.getenv("SHAREPOINT_URL"))
 path <- file.path("sites", Sys.getenv("SHAREPOINT_SITE"), "Shared Documents/Data/population/WPP2022", "WPP2022_PopulationBySingleAgeSex_Medium_1950-2021.zip")
-unzip(path, exdir = tempdir())
+dat <- sharepoint_download(sharepoint_url = Sys.getenv("SHAREPOINT_URL"), sharepoint_path = path)
+unzip(dat, exdir = tempdir())
+
 wpp_pop <- read_csv(file.path(tempdir(), "WPP2022_PopulationBySingleAgeSex_Medium_1950-2021.csv"))
 colnames(wpp_pop) <- tolower(colnames(wpp_pop))
 
