@@ -162,7 +162,7 @@ extrap_pop <- interpolated_populations %>%
   group_by(area_id, age_group, sex) %>%
   mutate(
     population = log(population),
-    population = exp(Hmisc::approxExtrap(year, population, xout = 2020:2025)$y),
+    population = exp(Hmisc::approxExtrap(year, population, xout = 2021:2025)$y),
     year = year + 5)
 
 interpolated_populations <- bind_rows(
