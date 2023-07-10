@@ -34,7 +34,7 @@ depends:
     use:
       depends/ago_areas.geojson: ago_areas.geojson
   ben_data_areas:
-    id: "20220715-165222-3819ceb3"
+    id: "20220715-161016-59627f77"
     use:
       depends/ben_areas_spectrum_national.geojson: ben_areas_spectrum_national.geojson
   bdi_data_areas:
@@ -82,7 +82,7 @@ depends:
     use:
       depends/gab_areas.geojson: gab_areas.geojson
   gha_data_areas:
-    id: "20230202-111112-830b65d7"
+    id: "20221010-095045-91772be9"
     use:
       depends/gha_areas.geojson: gha_areas.geojson
   gin_data_areas:
