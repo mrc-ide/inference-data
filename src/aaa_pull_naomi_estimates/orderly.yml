@@ -12,7 +12,7 @@ artefacts:
         - outputs/hierarchy-plot.png
 
 
-displayname: Get areas for parameterised tasks
+displayname: Import estimates and boundaries from finalised UNAIDS Naomi datasets 
 
 packages:
   - tidyverse
