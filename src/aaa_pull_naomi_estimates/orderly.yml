@@ -6,6 +6,10 @@ artefacts:
       filenames:
         - outputs/naomi_areas.geojson
         - outputs/naomi_output.zip
+  - staticgraph:
+      description: Check boundaries
+      filenames:
+        - outputs/hierarchy-plot.png
 
 
 displayname: Get areas for parameterised tasks
@@ -15,6 +19,7 @@ packages:
   - naomi
   - sf
   - spud
+  - naomi.utils
 
 parameters:
   iso3:

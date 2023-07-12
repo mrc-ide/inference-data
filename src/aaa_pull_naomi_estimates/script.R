@@ -40,3 +40,7 @@ naomi::save_output_package(out, "naomi_output", "outputs", overwrite = TRUE)
 # Save areas file
 st_write(areas, "outputs/naomi_areas.geojson", delete_dsn = TRUE)
 
+#' Plot hierarchy
+hierarchy_plot <- plot_area_hierarchy_summary(areas)
+ggsave("outputs/hierarchy-plot.png", hierarchy_plot, h = 6, w = 12)
+
