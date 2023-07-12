@@ -26,5 +26,4 @@ parameters:
     default: ~
   version:
     default: 2022
-  folder:
-    default: "2022 naomi preliminary"
+

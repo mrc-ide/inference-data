@@ -3,6 +3,10 @@
 #' Authenticate SharePoint login
 sharepoint <- spud::sharepoint$new("https://imperiallondon.sharepoint.com/")
 
+
+if(version == "2022") {folder <- "2022 naomi preliminary"}
+if(version == "2023") {folder <- "2023 naomi final"}
+
 folder_path <- paste0("Shared Documents/Data/Spectrum files/", folder, "/")
 
 outputs <- folder_path %>%
