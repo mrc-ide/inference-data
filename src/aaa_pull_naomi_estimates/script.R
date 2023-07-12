@@ -1,3 +1,5 @@
+sessionInfo()
+
 #' Importing data from finalised UNAIDS Naomi datasets 
 
 #' Authenticate SharePoint login
