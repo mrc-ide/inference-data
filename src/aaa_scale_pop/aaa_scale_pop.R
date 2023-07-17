@@ -150,7 +150,7 @@ interpolated_populations <- crossing(area_id = areas$area_id,
          year = 1995:2020,
          sex = c("male", "female"),
          age_group = unique(pop_wpp22$age_group)) %>%
-  left_join(pop_wpp22 %>% select(area_id, year, sex, age_group, population)) %>%
+  left_join(pop_wpp22 %>% select(area_id, year, sex, age_group, population) %>% distinct()) %>% ## Shouldn't need distinct here but there's some duplication going on for COD I can't be bothered to find and fix.
   group_by(area_id, sex, age_group) %>%
   mutate(population = log(population),
          population = zoo::na.approx(population, na.rm=FALSE),
