@@ -27,7 +27,6 @@ parameters:
   version:
     default: 2022
   source:
-
     default: "WPP2022"
 
 # global_resources:
@@ -42,12 +41,12 @@ depends:
     id: latest(parameter:iso3 == iso3 && parameter:version == version)
     use:
       depends/population_worldpop_naomi.csv: population_worldpop_naomi.csv
-  aaa_areas_pull:
+  aaa_pull_naomi_estimates:
     id: latest(parameter:iso3 == iso3 && parameter:version == version)
     use:
-      depends/naomi_areas.geojson: naomi_areas.geojson
+      depends/naomi_areas.geojson: outputs/naomi_areas.geojson
   cod_data_population-local:
-    id: latest
+    id: latest(parameter:version == version)
     use:
       depends/cod_population_local.csv: cod_population_local.csv
 
