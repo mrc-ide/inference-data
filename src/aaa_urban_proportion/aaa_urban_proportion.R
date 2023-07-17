@@ -1,5 +1,5 @@
 iso3_c <- iso3
-areas <- areas <- read_area_merged("depends/naomi_areas.geojson") %>%
+areas <- areas <- read_sf("depends/naomi_areas.geojson") %>%
   mutate(iso3 = iso3_c)
 unpd <- read_csv("wpp_urban_proportions.csv") %>%
   mutate(iso3 = countrycode::countrycode(country.name, "country.name", "iso3c")) %>%
