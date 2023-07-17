@@ -10,7 +10,7 @@ files <- list.files("depends")
 #   stop("Areas file not found: ", area_file)
 # }
 
-areas <- read_area_merged("depends/naomi_areas.geojson") %>%
+areas <- read_sf("depends/naomi_areas.geojson") %>%
   mutate(iso3 = iso3)
 
 worldpop <- read_csv("depends/population_worldpop_naomi.csv") %>%
