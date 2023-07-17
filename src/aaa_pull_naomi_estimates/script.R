@@ -17,7 +17,7 @@ outputs <- folder_path %>%
 
 dir.create("outputs")
 
-if(!grep(iso3, c("SSD", "ERI"))) {
+if(is_empty(grep(iso3, c("SSD", "ERI")))) {
   
   naomi_outputs <- outputs[grepl(".zip", outputs)]
   country_output <- naomi_outputs[grepl(iso3, naomi_outputs)]
