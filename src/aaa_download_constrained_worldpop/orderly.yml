@@ -19,6 +19,8 @@ parameters:
     default: ~
   version:
     default: 2022
+  source:
+    default: "WPP2022"
 
 packages:
   - naomi
@@ -45,6 +47,6 @@ depends:
       depends/naomi_areas.geojson: outputs/naomi_areas.geojson
 
   aaa_scale_pop:
-    id: latest(parameter:iso3 == iso3 && parameter:version == version)
+    id: latest(parameter:iso3 == iso3 && parameter:version == version && parameter:source == source)
     use:
       depends/interpolated_population.csv: interpolated_population.csv
