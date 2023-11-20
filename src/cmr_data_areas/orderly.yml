@@ -2,7 +2,7 @@ script: cmr_areas.R
 
 parameters:
   version:
-    default: "2022"
+    default: "2024"
 
 artefacts:
   - data:
@@ -31,3 +31,4 @@ packages:
   - sf
   - stringr
   - naomi.utils
+  - cowplot
