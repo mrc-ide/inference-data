@@ -18,12 +18,13 @@
 
 ## sf v 1.0.0 update changes to use s2 spherical geometry as default
 ## This creates issues for DHS coordinate data extraction scripts
+
 ## Revert back to planar geometry
 sf::sf_use_s2(FALSE)
 dir.create("check")
 
 #' Authenticate SharePoint login
-#' sharepoint <- spud::sharepoint$new("https://imperiallondon.sharepoint.com/")
+ sharepoint <- spud::sharepoint$new("https://imperiallondon.sharepoint.com/")
 #' 
 #' Read in files from SharePoint
 naomi_raw_path <- "sites/HIVInferenceGroup-WP/Shared%20Documents/Data/naomi-raw/"
