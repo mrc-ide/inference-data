@@ -2,42 +2,40 @@ script: eth_areas.R
 
 parameters:
   version:
-    default: "2022"
+    default: "2024"
 
 artefacts:
   - data:
       description: area hierarchy dataset
       filenames:
         - eth_areas.geojson
-  - data:
-      description: Datim area ID mapping
-      filenames:
-        - eth_area_map_datim_2023.csv
   - staticgraph:
       description: Ethiopia area hiearchy summary figure
       filenames:
       - eth_area_hierarchy.png
   - staticgraph:
-      description: 2023 new zone boundaries
+      description: 2024 new zone boundaries
       filenames:
-      - check/new-zone-2023-boundaries.pdf
+      - check/eth_2024_boundary_change.png
 
 displayname: ETH area hierarchy dataset for 2023
 
 description: |
-  Updates 2022 area hierarchy by promoting three new Woredas to Zones
-  Susbtantially Zone boundary cleaning was involved in creating 2022 version
-  of area boundaries.
-  Strategy for updating was to use 2022 version of eth_areas.geojson and use
-  previous Woreda boundaries to create new zone boundaries and edit the 
-  boundaries of the zones from which new zones were created.
-
+  Updates 2023 using new boudaries provided by MoH.Regional boudnaries has remained 
+  the same with teh exception of SNNPR splitting into Central and Sout Ethiopia. 
+  Zones boundaries have chnaged substantially, moving from 164 zones to 143 zones
+  without aligment to previous zones. 
+  Strategy - retain regional aread IDs and create new IDs for new regions. Create
+  new area IDs for all zones. 
+  New source of boudaries that has been updated in Datim: 
+  Ethiopia Central Statistics Agency. https://data.humdata.org/dataset/cod-ab-eth
+  
+  
+  
 packages:
   - dplyr
   - forcats
   - ggplot2
-  - gridExtra
-  - lwgeom
   - naomi
   - naomi.utils  
   - pryr
@@ -45,3 +43,5 @@ packages:
   - sf
   - spud
   - stringr
+  - cowplot
+  - rmapshaper

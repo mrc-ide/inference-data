@@ -1,12 +1,8 @@
 #' ## Ethiopia
-#' Source: PEPFAR
+#' Source: Ethiopia Central Statistics Agency
 #' Levels:
-#'   * 1: Region (13)
-#'   * 2: Zone (164)
-#' PEPFAR PSNU: Woreda (level 3)
-#' Spectrum: Region (level 1)
-#' EPP: Region (level 1)
-#' EPP Urban/Rural: Yes
+#'   * 1: Region (14)
+#'   * 2: Zone (143)
 
 dir.create("check")
 
@@ -20,183 +16,139 @@ sf::sf_use_s2(FALSE)
 
 #' ## Read in files from SharePoint
 
-
-#' 2023 boundaries (164 zones)
-#' Read in files from SharePoint
-#'
-#' Use extract of Datim org hierarchy for boundaries
-#' * The list of Zones have been updated in Datim but boundaries have not
-#' * Construct new boundaries using boundaries from the promoted Woredas
-
 naomi_raw_path <- "sites/HIVInferenceGroup-WP/Shared Documents/Data/naomi-raw"
 
-urls <- list(boundaries2023 = "ETH/2022-12-12 new-zones-2023/eth-datim-2022-12-08.geojson",
-             idmap_2023 = "ETH/2022-12-12 new-zones-2023/eth-area-id-2023.csv",
-             areas2022 = "ETH/2022-12-12 new-zones-2023/eth_areas_2022.geojson"
+urls <- list(boundaries2023 = "ETH/2023-11-24-change-from-164-to-143 zones/2023-03-08-eth_areas.geojson",
+             zones2024 = "ETH/2023-11-24-change-from-164-to-143 zones/Ethiopia_5_Zones_2023_Nov.zip",
+             regions2024 = "ETH/2023-11-24-change-from-164-to-143 zones/Ethiopia_4_Regions_2023_Nov.zip"
 ) %>%
-  lapply(function(x) file.path(naomi_raw_path, x)) %>%
-  lapply(URLencode)
+  lapply(function(x) file.path(naomi_raw_path, x)) 
+
 
 files <- lapply(urls, sharepoint$download)
 
-boundaries <- read_sf(files$boundaries2023)
-areasraw2023 <- read_csv(files$idmap_2023)
-areas2022 <- read_sf(files$areas2022)
+ 
+areas_2023 <- read_sf(files$boundaries2023)
+
+areas_2023 %>%
+  group_by(area_level_label) %>%
+  st_drop_geometry() %>%
+  summarise(n = n())
+
+areaswide_2023 <- naomi::spread_areas(areas_2023)
+
+zones2024 <- naomi.utils::read_sf_zip(files$zones2024)
+regions2024 <- naomi.utils::read_sf_zip(files$regions2024)
+
+zones2023 <- areas_2023 %>% filter(area_level == 2)
+regions2023 <- areas_2023 %>% filter(area_level == 1)
+
+zones <- ggplot() +
+  geom_sf(data = regions2023, 
+          fill = NA, colour = "black") +
+  geom_sf(data = regions2024, 
+          fill = NA, colour = alpha("red", 0.6)) +
+  th_map() +
+  ggtitle("Ethiopia 2023 Boundaries: Change from 13 to 14 regions", 
+          subtitle = "Black: 13 region boundaries from 2022 \nRed: 14 region boudnaries from 2023")
+
+setdiff(zones2023$area_name, zones2024$name)
+setdiff(zones2024$name, zones2023$area_name)
+
+regions <- ggplot() +
+  geom_sf(data = zones2023, 
+          fill = NA, colour = "black") +
+  geom_sf(data = zones2024, 
+          fill = NA, colour = alpha("red", 0.6)) +
+  th_map() +
+  ggtitle("Ethiopia 2023 Boundaries: Change from 164 to 143 zones", 
+          subtitle = "Black: 164 zone boundaries from 2022 \nRed: 143 zone boundaries from 2023")
 
 
-#' Construct boundaries for new Zones from promoted Woredas
+boundary_change <- plot_grid(zones, regions)
 
-new_zones <- c("Debre Markos Town", "Debre Birhan Town", "Kombolcha Town")
-edit_zones <- c("East Gojam", "North Shewa (Amhara)", "South Wolo")
+boundary_change
 
-new_boundaries <- boundaries %>%
-  filter(level == 6, name %in% new_zones) %>%
-  select(name)
+ggsave("check/eth_2024_boundary_change.png", boundary_change, h = 6, w = 12)
 
-old_boundaries <- areas2022 %>%
-  filter(area_level == 2, area_name %in% edit_zones) %>%
-  select(name = area_name)
+# Decision: 
+#  - Keep Regional area IDs as these have not changed beyond the SNNPR
+#    split to South and Central Ethiopia 
+#  - Generate new area IDs as the change from 164 to 143 zone zone boundaries
+#    looks different to the file from previous year, when comparing both zones 
+#    that have merged and those that have remained unchanged
 
-edit_boundaries <- old_boundaries %>%
-  st_difference(st_union(new_boundaries))
+object_size(zones2024)
+#' Simplify boundaries to reduce file size (2.42 Mb)
+zones2024_simple <- ms_simplify(zones2024, keep = 0.20) %>%
+  st_make_valid()
+pryr::object_size(zones2024_simple)
 
-p_new_zones <- bind_rows(
-  mutate(old_boundaries, label = "0. Old Zones"),
-  mutate(new_boundaries, label = "1. New Zones"),
-  mutate(edit_boundaries, label = "2. Edited Zones")
-) %>%
-  ggplot(aes(fill = label)) +
-  geom_sf() +
-  facet_wrap(~label) +
-  theme_void() +
-  theme(panel.border = element_rect())
+# Set seed to ensure random letter suffix is consistent
+set.seed(42)
 
-ggsave("check/new-zone-2023-boundaries.pdf", p_new_zones, h = 3, w = 9.5)
-
-new_and_edit_boundaries <- bind_rows(new_boundaries, edit_boundaries) %>%
-  select(area_name = name, geometry_new = geometry)
-
-areas2023 <- areasraw2023 %>%
-  left_join(
-    select(areas2022, area_id),
-    by = c("area_id2023" = "area_id")
-  ) %>%
-  left_join(new_and_edit_boundaries, by = "area_name")
-
-
-stopifnot(sum(!st_is_empty(areas2023$geometry_new)) == 6)
-stopifnot(sum(st_is_empty(areas2023$geometry)) == 6)
-
-areas2023 <- areas2023 %>%
+eth2024_wide <- zones2024_simple %>%
+  select(area_name = name, area_name1 = level4name, area_name2 = level5name) %>%
+  left_join(regions2023 %>% select(area_id, area_name1 = area_name)
+            %>% st_drop_geometry()) %>%
+  # Get old area IDs for regions and create new IDs for SNNPR split
   mutate(
-    geometry = st_cast(geometry, "GEOMETRY"),
-    geometry = if_else(!st_is_empty(geometry_new), geometry_new, geometry),
-    geometry_new = NULL
-  ) %>%
-  st_as_sf()
-
-stopifnot(!st_is_empty(areas2023$geometry))
-stopifnot(st_is_valid(areas2023))
-
-
-#' Look for overlapping areas
-
-overlap <- areas2023 %>%
-  select(area_level, area_id2023, area_name) %>%
-  st_intersection(., .) %>%
-  filter(area_level == area_level.1,
-         area_id2023 != area_id2023.1) %>%
-  mutate(area = st_area(.))
-
-overlap %>%
-  filter(as.numeric(area) > 0.1) %>%
-  arrange(-area) %>%
-  print(n = Inf)
-
-areas2023 %>%
-  filter(area_name %in% c("West Hararge", "East Bale")) %>%
-  ggplot(aes(fill = area_name)) +
-  geom_sf(alpha = 0.4)
-
-#' On plotting the largest of overlaps, the overlap is visually imperceptible.
-#' Don't worry about this for now
-
-#' # Simplify and clean boundaries
-
-pryr::object_size(areas2023)
-
-stopifnot(st_is_valid(areas2023))
-stopifnot(st_geometry_type(areas2023) %in% c("POLYGON", "MULTIPOLYGON"))
+    area_id1 = case_when(
+      area_name1 == "Central Ethiopia" ~"ETH_1_24gf", 
+      area_name1 == "South Ethiopia" ~"ETH_1_25lm", 
+      TRUE ~ area_id), area_id = NULL, 
+    area_id1 = str_replace(area_id1, "ETH_1_", "ETH_01_")) %>%
+  # Create new area IDs for zone
+  arrange(area_id1, area_name) %>%
+  mutate(num = sprintf("%03d", row_number()), 
+         suffix = paste0(sample(letters, 143, TRUE), sample(letters, 143, TRUE)), 
+         area_id2 = paste0("ETH_02_", num, suffix), 
+         num = NULL, suffix = NULL,
+         area_name0 = "Ethiopia", area_id0 = "ETH", 
+         spectrum_region_code = case_when(
+           area_name1 == "Addis Ababa" ~ 10,
+           area_name1 == "Afar" ~ 11,
+           area_name1 == "Amhara" ~ 12,
+           area_name1 == "Benishangul-Gumuz" ~ 13,
+           area_name1 == "Dire Dawa" ~ 14,
+           area_name1 == "Gambella" ~ 15,
+           area_name1 == "Harari" ~ 16,
+           area_name1 == "Oromia" ~ 17,
+           area_name1 == "Central Ethiopia" ~ 18,
+           area_name1 == "South Ethiopia" ~ 18,
+           area_name1 == "South West Ethiopia" ~ 18,
+           area_name1 == "Somali" ~ 19,
+           area_name1 == "Tigray" ~ 20,
+           area_name1 == "Sidama" ~ 21)) %>%
+  select(area_id0, area_name0, area_id1, area_name1, area_id2, area_name2, 
+         area_name, spectrum_region_code)
 
 
-spectrum_region_code <- c(
-  "Addis Ababa" = 10,
-  "Afar" = 11,
-  "Amhara" = 12,
-  "Benishangul-Gumuz" = 13,
-  "Dire Dawa" = 14,
-  "Gambella" = 15,
-  "Harari" = 16,
-  "Oromia" = 17,
-  "SNNPR" = 18,
-  "South West Ethiopia" = 18,
-  "Somali" = 19,
-  "Tigray" = 20,
-  "Sidama" = 21
-)
+eth_2024_long <- eth2024_wide %>%
+  rename_all(~sub("area\\_", "", .)) %>%
+  gather_areas()
 
-areas2023 <- areas2023 %>%
-  left_join(
-    areas2022 %>%
-      st_drop_geometry() %>%
-      select(area_id2022 = area_id, spectrum_region_code, area_sort_order),
-    by = "area_id2022"
-  ) %>%
-  arrange(area_sort_order) %>%
-  mutate(spectrum_region_code = if_else(area_id2023 %in% c("ETH_2_168wv", "ETH_2_169xy", "ETH_2_170lk"), 12, spectrum_region_code))
 
-eth_areas2023 <- areas2023 %>%
+eth_areas2024 <- eth_2024_long %>%
   mutate(
-    area_id = area_id2023,
     area_sort_order = row_number(),
     center = sf::st_point_on_surface(geometry),
     center_x = sf::st_coordinates(center)[,1],
     center_y = sf::st_coordinates(center)[,2],
     center = NULL,
     area_level_label = area_level %>%
-      recode(`0` = "Country", `1` = "Region", `2` = "Zone"),
-    display = TRUE,
-    spectrum_level = area_level == 1,
-    epp_level = area_level == NA,
-    naomi_level = area_level == 2,
-    pepfar_psnu_level = area_level == 2
-  ) %>%
-  select(all_of(names(areas2022)))
+      recode(`0` = "Country", `1` = "Region", `2` = "Zone")
+  )
 
-stopifnot(!duplicated(eth_areas2023$area_id))
-stopifnot(!duplicated(eth_areas2023$area_sort_order))
+
 
 #' Plot hierarchy
-plot_area_hierarchy_summary(eth_areas2023)
-# Overlapping zone boundaries -> fragments in regional + national boundaries
-
-#' Save boundaries
-
-sf::st_write(eth_areas2023, "eth_areas.geojson", delete_dsn = TRUE)
-
-#' Plot hierarchy
-hierarchy_plot <- plot_area_hierarchy_summary(eth_areas2023)
+hierarchy_plot <- plot_area_hierarchy_summary(eth_areas2024)
+hierarchy_plot 
 ggsave("eth_area_hierarchy.png", hierarchy_plot, h = 6, w = 12)
 
 
-
-#' Datim area map
-
-area_map_datim <- areas2023 %>%
-  st_drop_geometry() %>%
-  select(area_id = area_id2023, map_level = level, map_name = name, map_id = id) %>%
-  mutate(map_source = "Datim")
-
-write_csv(area_map_datim, "eth_area_map_datim_2023.csv", na = "")
+#' Save boundaries
+sf::st_write(eth_areas2024, "eth_areas.geojson", delete_dsn = TRUE)
 
 while (!is.null(dev.list())) dev.off()
