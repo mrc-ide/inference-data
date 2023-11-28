@@ -9,100 +9,174 @@
 #' EPP Urban/Rural:
 #' PEPFAR PSNU:
 #' 
-#' 2023 estimates update:
+#' 2024 estimates update:
 # * Admin 0 = National (for National HIV estimates)
 # * Admin 1 = 10 régions (for PEPFAR COP planning and regional planning)
 # * Admin 2 = 10 régions + 2 villes (for regional planning and city level planning 
 #                                    as it also takes into account 2 major cities)
-# * Admin 3 = 197 districts for district level planning
+# * Admin 3 = 200 districts for district level planning
 
 ## sf v 1.0.0 update changes to use s2 spherical geometry as default
 ## This creates issues for DHS coordinate data extraction scripts
+
 ## Revert back to planar geometry
 sf::sf_use_s2(FALSE)
 dir.create("check")
 
 #' Authenticate SharePoint login
-sharepoint <- spud::sharepoint$new("https://imperiallondon.sharepoint.com/")
-
+ sharepoint <- spud::sharepoint$new("https://imperiallondon.sharepoint.com/")
+#' 
 #' Read in files from SharePoint
 naomi_raw_path <- "sites/HIVInferenceGroup-WP/Shared%20Documents/Data/naomi-raw/"
-
-
-#' Read in files from SharePoint
-urls <- list( boundaries_2023 = "CMR/2022-11-30%20190%20to%20197%20districts%20(WHO)/Cameroon%20197,%20from%20WHO%202022%2012.zip", 
-              districts_2023 = "CMR/2022-11-30%20190%20to%20197%20districts%20(WHO)/2022_11_30_cmr_hierarchy_wide.xlsx"
+#' 
+#' 
+#' #' Read in files from SharePoint
+urls <- list( boundaries_2023 = "CMR/2023-10-13%20197%20to%20200%20districts%20(DHIS)/cameroon-areas.geojson",
+              boundaries_2024 = "CMR/2023-10-13%20197%20to%20200%20districts%20(DHIS)/CMR%20DHIS.zip"
 ) %>%
   lapply(function(x) file.path(naomi_raw_path, x)) %>%
   lapply(URLencode)
 
 files <- lapply(urls, sharepoint$download)
 
-# Read in new 2023 boundaries
-district_names_2023 <- read_xlsx(files$districts_2023, sheet = 1) %>%
-  mutate(area_name = `District sanitaire\r\n(In DHIS, New)`, 
-         area_name = area_name %>% sub("District ", "", .))
 
-# Map geometry to area names from DHIS
-district_boundaries_2023 <- read_sf_zip(files$boundaries_2023) %>%
-  select(area_name = District_S) %>%
-  mutate(area_name = recode(area_name, 
-                            "Bétaré Oya" = "Betare Oya",    
-                            "Biyem-Assi" = "Biyem Assi",      
-                            "Cité des palmiers" = "Cite Des Palmiers",
-                            "Elig-Mfomo" = "Elig Mfomo",       
-                            "Eyumojock" = "Eyumodjock",      
-                            "Garoua 1" = "Garoua I",        
-                            "Garoua 2" = "Garoua II",       
-                            "Garoua Boulaï" = "Garoua Boulai", 
-                            "Gueré" = "Guere",            
-                            "Kumba" = "Kumba-South",           
-                            "Kumba North" = "Kumba-North",     
-                            "Makari" = "Makary",         
-                            "Mvog Ada" = "Mvog-Ada",       
-                            "Ndélélé" = "Ndelele",         
-                            "New-Bell"  = "New Bell",       
-                            "Ngaoundéré Rural" = "Ngaoundere Rural",
-                            "Ngaoundéré Urbain" = "Ngaoundere Urbain",
-                            "Saa" = "Sa'a",             
-                            "Tignère" = "Tignere",        
-                            "Tokombéré" = "Tokombere",       
-                            "Zoétele"  = "Zoetele")) %>%
-  left_join(district_names_2023) %>%
+
+raw_2024 <- read_sf_zip_list(files$boundaries_2024) %>%
+  as.data.frame() %>%
+  st_as_sf()
+
+cmr_areas_2022 <- read_sf(files$boundaries_2023)
+
+object_size(raw_2024)
+
+cmr_simple <- raw_2024 %>% 
+  st_transform(crs = '+proj=aeqd +lat_0=53.6 +lon_0=12.7') %>%
+  st_simplify(., preserveTopology = FALSE, dTolerance = 200) %>%
+  as.data.frame() %>%
   st_as_sf() %>%
-  select(id1 = area_id1, name1 = area_name1,
-         id2 = area_id3, name2 = area_name) %>%
-  mutate(id0 = "CMR", name0 = "Cameroon", spectrum_region_code = 0L, 
-         id2 = str_replace(id2, "CMR_3", "CMR_2")) 
+  sf::st_make_valid() %>%
+  st_transform(4326)
 
-cmr_simple <- district_boundaries_2023 %>%
-  rmapshaper::ms_simplify(keep = 0.03)
+cmr_2024 <- cmr_simple %>%
+  filter(area_level == 2) %>%
+  mutate(area_name = str_replace(area_name, "District ", "")) %>%
+  select(area_name) %>%
+  left_join(cmr_areas_2022 %>% select(area_name, area_id, parent_area_id) %>%
+              st_drop_geometry())
 
-cmr_wide <- cmr_simple %>%
-  select(name2 = name1, id3 = id2, name3 = name2, everything()) %>%
-  mutate(id3 = str_replace(id3, "CMR_2", "CMR_3"), 
-         name1 = recode(name2, 
-                        "Littoral (sans Douala)" = "Littoral", 
-                        "Douala" = "Littoral", 
-                        "Centre (sans Yaoundé)" = "Centre", 
-                        "Yaoundé" = "Centre")) %>%
-  arrange(name2) %>%
-  group_by(name1) %>%
-  mutate(id1 = paste0("CMR_1_", cur_group_id()), 
-         id2 = str_replace(id1, "CMR_1", "CMR_2"), 
-         id2 = case_when(name2 == "Douala" ~ "CMR_2_11", 
-                         name2 == "Yaoundé" ~ "CMR_2_12", 
-                         TRUE ~ id2)) %>%
-  select(id0, name0, id1, name1, id2, name2,id2, name3, everything()) %>%
-  arrange(name1, name2)
+cmr_2024 %>%
+  filter(is.na(area_id))
 
-cmr_long <- gather_areas(cmr_wide)
+compare_map_boundaries <- function(area_names, 
+                                   df1, df2, plot_title) {
+  
+  theme <- theme(axis.text.x = element_blank(),
+                 axis.text.y = element_blank(),
+                 axis.ticks = element_blank(), 
+                 plot.margin = margin(0,0,0,0))
+  
+  title  <- ggdraw() + 
+    draw_label(plot_title, fontface = 'bold', x = 0, hjust = 0) +
+    theme(plot.margin = margin(0,0,1,0))
+  
+  a <-  ggplot() + geom_sf(data = df1 %>% filter(area_name %in% area_names), 
+                           aes(fill = area_name)) + theme +
+    ggtitle("Boundaries 2022")
+  
+  
+  b <-  ggplot() + geom_sf(data = df2 %>% filter(area_name %in% area_names), 
+                           aes(fill = area_name)) + theme +
+    ggtitle("Boundaries 2023")
+  
+  maps <- plot_grid(a,b, nrow = 1) 
+  plot_grid(title, maps, ncol = 1, rel_heights = c(0.1, 1))
+  
+}
 
-cmr_areas_2022 <- cmr_long %>%
+
+# Visualize changes
+# District Ambam -> split into Ambam and Kye ossi
+
+p1 <- compare_map_boundaries(area_names = c("Olamze", "Ambam", "Kye ossi"), 
+                       df1 = cmr_areas_2022, df2 = cmr_2024, 
+                       plot_title = "Ambam split into Ambam and Kye ossi")
+p1
+
+
+# District Kribi -> split into Kribi and Niete
+p2 <- compare_map_boundaries(area_names = c("Kribi", "Niete"), 
+                             df1 = cmr_areas_2022, df2 = cmr_2024, 
+                             plot_title = "Kribi split into Kribi and Niete")
+p2
+
+# District Kribi -> split into Kribi and Niete
+names <- c("Garoua 1", "Garoua 2", "Garoua I", "Garoua II", 
+           "Gashinga", "Pitoa", "Gaschiga")
+
+p3 <- compare_map_boundaries(area_names = names, 
+                             df1 = cmr_areas_2022, df2 = cmr_2024, 
+                             plot_title = "Gaschiga and Pitoa boundaries extended into Garoua I + II")
+p3
+
+# Figure out where Belel is
+names <- c("Belel", "Ngaoundere Rural", "Ngaoundere Urbain")
+
+p4 <- compare_map_boundaries(area_names = names, 
+                             df1 = cmr_areas_2022, df2 = cmr_2024, 
+                             plot_title = "Ngaoundere Rural split into Ngaoundere Rural and Belel")
+p4
+
+
+plot_grid(p1, p2, p3, p4, ncol = 1)
+
+
+# Change area_id for new districts and altered boundaries
+cmr_clean <- cmr_2024 %>%
+  mutate(
+    area_id = case_when(
+      area_name == "Ambam" ~ "CMR_3_183jg", 
+      area_name == "Kye ossi" ~ "CMR_3_198lm",
+      area_name == "Kribi" ~ "CMR_3_181sm", 
+      area_name == "Niete" ~ "CMR_3_199jv",
+      area_name == "Gaschiga" ~ "CMR_3_106ag",
+      area_name == "Garoua 1" ~ "CMR_3_104es", 
+      area_name == "Garoua 2" ~ "CMR_3_105dj", 
+      area_name == "Pitoa" ~ "CMR_3_109wk",
+      area_name == "Ngaoundere Rural" ~ "CMR_3_8pk", 
+      area_name == "Belel" ~ "CMR_3_200rt", 
+      TRUE ~ area_id), 
+    parent_area_id = case_when(
+      area_name == "Kye ossi" ~ "CMR_2_9",
+      area_name == "Niete" ~ "CMR_2_9",
+      area_name == "Belel" ~ "CMR_2_1", 
+      area_name == "Garoua 1" ~ "CMR_2_6", 
+      area_name == "Garoua 2" ~ "CMR_2_6", 
+      TRUE ~ parent_area_id), 
+    area_level = 3)
+
+cmr_clean %>%
+  filter(is.na(area_id))
+
+cmr_clean %>%
+  filter(is.na(parent_area_id))
+
+cmr_final <- cmr_areas_2022 %>%
+  select(area_id, area_name, parent_area_id, area_level) %>%
+  filter(area_level %in% 0:2) %>%
+  bind_rows(cmr_clean) %>%
+  mutate(area_id = str_replace(area_id, "CMR_1", "CMR_01"), 
+         area_id = str_replace(area_id, "CMR_2", "CMR_02"), 
+         area_id = str_replace(area_id, "CMR_3", "CMR_03"), 
+         parent_area_id = str_replace(parent_area_id, "CMR_1", "CMR_01"), 
+         parent_area_id = str_replace(parent_area_id, "CMR_2", "CMR_02"))
+
+cmr_areas_2023 <- cmr_final %>%
+  arrange(parent_area_id, area_id) %>%
   mutate(center = sf::st_point_on_surface(geometry),
          center_x = sf::st_coordinates(center)[,1],
          center_y = sf::st_coordinates(center)[,2],
          center = NULL,
+         spectrum_region_code = 0,
          area_level_label = recode(area_level,
                                    `0` = "Pays",
                                    `1` = "Région",
@@ -115,9 +189,7 @@ cmr_areas_2022 <- cmr_long %>%
                   center_x, center_y, geometry)
 
 
-
-
-hierarchy_plot <- plot_area_hierarchy_summary(cmr_areas_2022)
+hierarchy_plot <- plot_area_hierarchy_summary(cmr_areas_2023)
 dir.create("check")
 
 ggsave("check/cmr-hierarchy-plot.png", hierarchy_plot, h = 6, w = 12)
@@ -125,5 +197,5 @@ ggsave("check/cmr-hierarchy-plot.png", hierarchy_plot, h = 6, w = 12)
 while (!is.null(dev.list())) dev.off()
 
 #' Save boundaries
-sf::st_write(cmr_areas_2022, "cmr_areas.geojson", delete_dsn = TRUE)
+sf::st_write(cmr_areas_2023, "cmr_areas.geojson", delete_dsn = TRUE)
 
