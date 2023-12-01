@@ -87,7 +87,19 @@ pryr::object_size(zones2024_simple)
 # Set seed to ensure random letter suffix is consistent
 set.seed(42)
 
-eth2024_wide <- zones2024_simple %>%
+
+# Fix GEOMETRYCOLLECTION issue identified when trying to run extract worldpop
+# data with these boundaries
+st_geometry_type(zones2024_simple) %>% as.data.frame(.) %>% distinct(.)
+
+# Bole zone
+filter(zones2024_simple ,st_is(geometry, "GEOMETRYCOLLECTION"))
+
+zones2024_clean <- st_collection_extract(zones2024_simple, "POLYGON")
+  
+st_geometry_type(zones2024_clean) %>% as.data.frame(.) %>% distinct(.)
+
+eth2024_wide <- zones2024_clean %>%
   select(area_name = name, area_name1 = level4name, area_name2 = level5name) %>%
   left_join(regions2023 %>% select(area_id, area_name1 = area_name)
             %>% st_drop_geometry()) %>%
@@ -139,7 +151,6 @@ eth_areas2024 <- eth_2024_long %>%
     area_level_label = area_level %>%
       recode(`0` = "Country", `1` = "Region", `2` = "Zone")
   )
-
 
 
 #' Plot hierarchy
